@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources>
+    <mysql_data_types>
+        <data_type>INT</data_type>
+        <data_type>TINYINT</data_type>
+        <data_type>SMALLINT</data_type>
+        <data_type>MEDIUMINT</data_type>
+        <data_type>BIGINT</data_type>
+        <data_type>FLOAT</data_type>
+        <data_type>DOUBLE</data_type>
+        <data_type>DECIMAL</data_type>
+        <data_type>DATE</data_type>
+        <data_type>DATETIME</data_type>
+        <data_type>TIMESTAMP</data_type>
+        <data_type>TIME</data_type>
+        <data_type>YEAR</data_type>
+        <data_type>CHAR</data_type>
+        <data_type>VARCHAR</data_type>
+        <data_type>BLOB</data_type>
+        <data_type>TEXT</data_type>
+        <data_type>TINYBLOB</data_type>
+        <data_type>TINYTEXT</data_type>
+        <data_type>MEDIUMBLOB</data_type>
+        <data_type>MEDIUMTEXT</data_type>
+        <data_type>LONGBLOB</data_type>
+        <data_type>LONGTEXT</data_type>
+        <data_type>ENUM</data_type>
+    </mysql_data_types>
+    <alterego_all_headers>
+        <header>Product_ID</header>
+        <header>SKU</header>	
+        <header>Matrix_ID</header>	
+        <header>Product_Code</header>	
+        <header>Name</header>	
+        <header>Description</header>	
+        <header>Description_HTML</header>	
+        <header>Stock_Type</header>	
+        <header>Stock_Level</header>	
+        <header>Price_RRP</header>	
+        <header>Trade_Price</header>	
+        <header>Categories</header>	
+        <header>Brand</header>	
+        <header>Product_Range</header>	
+        <header>Material</header>	
+        <header>Size</header>	
+        <header>Height</header>	
+        <header>Length</header>	
+        <header>Width</header>	
+        <header>Weight</header>	
+        <header>Colour</header>	
+        <header>Image</header>	
+        <header>Created_At</header>	
+        <header>Updated_At</header>	
+        <header>Image_1</header>	
+        <header>Image_2</header>	
+        <header>Image_3</header>	
+        <header>Image_4</header>	
+        <header>Image_5</header>	
+        <header>Image_6</header>	
+        <header>Image_7</header>	
+        <header>Image_8</header>	
+        <header>Image_9</header>	
+        <header>Image_10</header>
+    </alterego_all_headers>
+    <alterego_variants_headers>
+        <header type="INT(10) UNSIGNED">Product_ID</header>
+        <header type="VARCHAR(255)">SKU</header>
+        <header type="INT(10) UNSIGNED">Matrix_ID</header>
+        <header type="VARCHAR(255)">Product_Code</header>
+        <header type="VARCHAR(255)">Name</header>
+        <header type="VARCHAR(255)">Description</header>
+        <header type="VARCHAR(255)">Description_HTML</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Price_RRP</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Trade_Price</header>
+        <header type="VARCHAR(255)">Stock_Type</header>
+        <header type="VARCHAR(255)">Stock_Level</header>     
+        <header type="VARCHAR(255)">Product_Range</header>      
+        <header type="VARCHAR(255)">Size</header>
+        <header type="VARCHAR(255)">Colour</header>
+        <header type="VARCHAR(255)">Categories</header>
+        <header type="VARCHAR(255)">Brand</header>
+        <header type="VARCHAR(255)">Material</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Height</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Length</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Width</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Weight</header>
+        <header type="VARCHAR(255)">Created_At</header>
+        <header type="VARCHAR(255)">Updated_At</header>
+        <header type="VARCHAR(255)">Image</header>
+        <header type="VARCHAR(255)">Image_1</header>
+        <header type="VARCHAR(255)">Image_2</header>
+        <header type="VARCHAR(255)">Image_3</header>
+        <header type="VARCHAR(255)">Image_4</header>
+        <header type="VARCHAR(255)">Image_5</header>
+        <header type="VARCHAR(255)">Image_6</header>
+        <header type="VARCHAR(255)">Image_7</header>
+        <header type="VARCHAR(255)">Image_8</header>
+        <header type="VARCHAR(255)">Image_9</header>
+        <header type="VARCHAR(255)">Image_10</header>
+    </alterego_variants_headers>
+    <alterego_groups_headers>
+        <header type="INT(10) UNSIGNED">Group_ID</header>
+        <header type="VARCHAR(255)">Base_SKU</header>
+        <header type="VARCHAR(255)">Variant_IDs</header>
+    </alterego_groups_headers>
+    <alterego_indices>
+        <index index="PRIMARY KEY">Product_ID</index>
+    </alterego_indices>
+    <alterego_colours>
+        <colour>WHITE</colour>
+        <colour>BLACK</colour>
+        <colour>GREY</colour>
+        <colour>RED</colour>
+        <colour>BLUE</colour>
+        <colour>PURPLE</colour>
+    </alterego_colours>
+    <alterego_sizes>
+        <size>12X</size>
+        <size>12-XSX</size>
+        <size>ONESIZE</size>
+        <size>ONESIZE PLUS</size>
+        <size>ONESIZE (PLUS)</size>
+        <size>XSMALL</size>
+        <size>SMALL</size>
+        <size>MEDIUM</size>
+        <size>LARGE</size>
+        <size>XLARGE</size>
+        <size>XXLARGE</size>
+        <size>S/M</size>
+        <size>M/L</size>
+        <size>L/XL</size>
+        <size>XL</size>
+        <size>XXL</size> 
+        <size>S-L</size>
+    </alterego_sizes>
+</resources>
