@@ -25,6 +25,18 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             }
             break;
 
+        case 'changeIPP' :
+            
+            $row = $_POST['current_row'];
+            $GLOBALS['num_rows'] = $_POST['ipp'];
+            $html = showProducts($row);
+            
+            $return = array('row' => $row, 'html' => $html);            
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
+            echo $json;
+//            echo $html;
+            break;
+
         case 'showTables' :
             echo getTables();
             break;
@@ -46,16 +58,34 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             break;
 
         case 'showProducts' :
-            $html = showProducts();
-            echo $html;
+            $row = $_POST['current_row'];
+            $html = showProducts($row);
+            
+            $return = array('row' => $row, 'html' => $html);            
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
+            echo $json;
             break;
 
         case 'nextPage' :
-            getNextPage();
+//            getNextPage();
+            $row = $_POST['current_row'] + $GLOBALS['num_rows'];
+            $html = showProducts($row);
+            
+            $return = array('row' => $row, 'html' => $html);            
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
+            echo $json;
+//            echo $html;
             break;
 
         case 'previousPage' :
-            getPreviousPage();
+//            getPreviousPage();
+            $row = $_POST['current_row'] - $GLOBALS['num_rows'];
+            $html = showProducts($row);
+            
+            $return = array('row' => $row, 'html' => $html);            
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
+            echo $json;
+//            echo $html;
             break;
     }
 }

@@ -49,14 +49,13 @@ include 'main.php';
             <form id="products_form" name="products_form" method="POST" action="showProducts">
                 <h2>Product List</h2>
                 <input id="current_row" type="hidden" name="current_row" value="0" />
-                 <!-input id="show_tables_btn" class="button_class"type="button" name= 'show_tables_btn' value="Show Tables" /-->
                 <input id="next_page_btn" class="button_class align_right"type="button" name= 'next_page_btn' value="Next Page" hidden />
                 <input id="prev_page_btn" class="button_class align_right" type="button" name= 'prev_page_btn' value="Previous Page" hidden />
                 <select id="items_per_page"  class="align_right"  name="items_per_page">
                     <option name="5_ipp"value="5" selected>5</option>
-                    <option name="10_ipp" value="5">10</option>
-                    <option name="25_ipp" value="5">25</option>
-                    <option name="50_ipp" value="5">50</option>
+                    <option name="10_ipp" value="10">10</option>
+                    <option name="25_ipp" value="25">25</option>
+                    <option name="50_ipp" value="50">50</option>
                 </select>
                 <?php getTables(); ?>
                 <p></p>

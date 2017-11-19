@@ -304,10 +304,13 @@ function updateDB() {
     populateTableFromCSV($conn, $file_name);
 }
 
-function showProducts() {
+function showProducts($row) {
 
     session_start();
-    $row = $_SESSION['row'] = $_POST['current_row'];
+//    $row = $_SESSION['row'] = $_POST['current_row'];
+    if($row < 0){
+        $row = 0;
+    }
     $pos = stripos($_POST['table_name'], '_');
     $table_name = substr($_POST['table_name'], 0, $pos);
 
