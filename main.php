@@ -13,7 +13,7 @@ if (!include('xml_functions.php')) {
 $GLOBALS['res_dir'] = './resources/';
 $GLOBALS['res_file'] = './resources/resources.xml';
 $GLOBALS['media_dir'] = './media/';
-$GLOBALS['num_rows'] = 5;
+//$GLOBALS['num_rows'] = 5;
 
 if (isset($_POST['action']) && !empty($_POST['action'])) {
 
@@ -27,11 +27,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
         case 'changeIPP' :
             
-            $row = $_POST['current_row'];
-            $GLOBALS['num_rows'] = $_POST['ipp'];
-            $html = showProducts($row);
+            $start_row = $_POST['current_row'];
+//            $GLOBALS['num_rows'] = $_POST['ipp'];
+            $items_per_page  = $_POST['ipp'];
+            $html = showProducts($start_row, $items_per_page);
             
-            $return = array('row' => $row, 'html' => $html);            
+            $return = array('row' => $start_row, 'html' => $html);            
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
             echo $json;
 //            echo $html;
@@ -58,20 +59,23 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             break;
 
         case 'showProducts' :
-            $row = $_POST['current_row'];
-            $html = showProducts($row);
+            $start_row = $_POST['current_row'];
+            $items_per_page = $_POST['ipp'];
+            $html = showProducts($start_row, $items_per_page);
             
-            $return = array('row' => $row, 'html' => $html);            
+            $return = array('row' => $start_row, 'html' => $html);            
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
             echo $json;
             break;
 
         case 'nextPage' :
 //            getNextPage();
-            $row = $_POST['current_row'] + $GLOBALS['num_rows'];
-            $html = showProducts($row);
+            $items_per_page = $_POST['ipp'];
+            $start_row = $_POST['current_row'] + $items_per_page;
             
-            $return = array('row' => $row, 'html' => $html);            
+            $html = showProducts($start_row, $items_per_page);
+            
+            $return = array('row' => $start_row, 'html' => $html);            
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
             echo $json;
 //            echo $html;
@@ -79,10 +83,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
         case 'previousPage' :
 //            getPreviousPage();
-            $row = $_POST['current_row'] - $GLOBALS['num_rows'];
-            $html = showProducts($row);
+            $items_per_page = $_POST['ipp'];
+            $start_row = $_POST['current_row'] - $items_per_page;
             
-            $return = array('row' => $row, 'html' => $html);            
+            $html = showProducts($start_row, $items_per_page);
+            
+            $return = array('row' => $start_row, 'html' => $html);            
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);     
             echo $json;
 //            echo $html;

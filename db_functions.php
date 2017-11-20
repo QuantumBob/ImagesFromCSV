@@ -145,12 +145,12 @@ function getRow($conn, $table_name, $row) {
     return $result;
 }
 
-function getProductData($conn, $table_name, $start_row) {
+function getProductData($conn, $table_name, $start_row, $items_per_page) {
 
-    $num_rows = $GLOBALS['num_rows'];
+//    $num_rows = $GLOBALS['num_rows'];
 
     $table = $table_name . '_groups';
-    $groups_results = $conn->query("SELECT * FROM {$table} LIMIT {$start_row}, {$num_rows}");
+    $groups_results = $conn->query("SELECT * FROM {$table} LIMIT {$start_row}, {$items_per_page}");
 
     if ($groups_results !== FALSE) {
 

@@ -17,7 +17,7 @@ jQuery(document).ready(function ($) {
 
 //        jQuery('#current_row').val(jQuery('#current_row').val() + 5);
         formData.append("current_row", jQuery('#current_row').val());
-
+        formData.append("ipp", jQuery("#items_per_page").val());
         jQuery('#next_page_btn').attr('name', this.name);
         jQuery('#prev_page_btn').attr('name', this.name);
         jQuery('#items_per_page').attr('name', this.name);
@@ -309,6 +309,7 @@ jQuery(document).ready(function ($) {
         formData.append("action", 'nextPage');
 //        jQuery('#current_row').val(jQuery('#current_row').val() + 5);
         formData.append("current_row", jQuery('#current_row').val());
+        formData.append("ipp", jQuery("#items_per_page").val());
 
 
         jQuery.ajax({
@@ -352,6 +353,7 @@ jQuery(document).ready(function ($) {
         var formData = new FormData(myForm);
         formData.append("action", 'previousPage');
         formData.append("table_name", this.name);
+        formData.append("ipp", jQuery("#items_per_page").val());
 //        if (jQuery('#current_row').val() < 5) {
 //            jQuery('#current_row').val(0);
 //        } else {
@@ -420,12 +422,6 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    jQuery("#product_div").on('change', '.selling_checkbox', function () {
-        var id = $(this).attr("data-id");
-        alert(id);
-
-    });
-
     jQuery("#items_per_page").change(function () {
 
         var myForm = jQuery('#products_form')[0];
@@ -433,7 +429,7 @@ jQuery(document).ready(function ($) {
 
         var items_per_page = jQuery("#items_per_page").val();
         formData.append("current_row", jQuery('#current_row').val());
-        formData.append("ipp", items_per_page);
+        formData.append("ipp", jQuery("#items_per_page").val());
         formData.append("table_name", this.name);
         formData.append("action", 'changeIPP');
 
@@ -469,42 +465,5 @@ jQuery(document).ready(function ($) {
             }
         });
     });
-
-//    jQuery("#show_tables_btn").click(function(){
-//        
-//        var formData = new FormData();
-//         formData.append("action", 'showTables');
-//         
-//         jQuery.ajax({
-//            url: 'main.php',
-//            type: 'post',
-//            data: formData,
-//            // Tell jQuery not to process data or worry about content-type. You *must* include these options!
-//            cache: false,
-//            contentType: false,
-//            processData: false,
-//            // Custom XMLHttpRequest
-//            xhr: function () {
-//                var myXhr = $.ajaxSettings.xhr();
-//                if (myXhr.upload) {
-//                    // For handling the progress of the upload
-//                    myXhr.upload.addEventListener('progress', function (e) {
-//                        if (e.lengthComputable) {
-//                            $('progress').attr({
-//                                value: e.loaded,
-//                                max: e.total,
-//                            });
-//                        }
-//                    }, false);
-//                }
-//                return myXhr;
-//            },
-//            success: function (data) {
-////                jQuery('#product_data').remove();
-////                jQuery('#product_div').append(data);
-//            }
-//        });
-//    });
-
 
 });

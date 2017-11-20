@@ -304,19 +304,19 @@ function updateDB() {
     populateTableFromCSV($conn, $file_name);
 }
 
-function showProducts($row) {
+function showProducts($start_row, $items_per_page) {
 
     session_start();
 //    $row = $_SESSION['row'] = $_POST['current_row'];
-    if($row < 0){
-        $row = 0;
+    if($start_row < 0){
+        $start_row = 0;
     }
     $pos = stripos($_POST['table_name'], '_');
     $table_name = substr($_POST['table_name'], 0, $pos);
 
     $conn = openDB('rwk_productchooserdb');
 
-    $data = getProductData($conn, $table_name, $row);
+    $data = getProductData($conn, $table_name, $start_row, $items_per_page);
     $html = product_data_to_html2($data);
 
     return implode(' ', $html);
