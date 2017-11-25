@@ -8,19 +8,62 @@ jQuery(document).ready(function ($) {
         jQuery("#product_div").show();
     });
 
+    jQuery("#export_csv_btn").click(function () {
+
+        var myForm = jQuery('#products_form')[0];
+        var formData = new FormData(myForm);
+
+        formData.append("action", 'exportCSV');
+        formData.append("table_name", jQuery('#products_table').attr('name'));
+        
+        jQuery('#export_table_name').val( jQuery('#products_table').attr('name'));
+        
+        jQuery.ajax({
+            url: 'main.php',
+            type: 'post',
+            data: formData,
+            // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('progress').attr({
+                                value: e.loaded,
+                                max: e.total,
+                            });
+                        }
+                    }, false);
+                }
+                return myXhr;
+            },
+            success: function (data) {
+                jQuery('#export_file')[0].submit();
+            }
+        });
+    });
+
     jQuery(".gen_table_btn").click(function () {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
-        formData.append("table_name", this.name);
-        formData.append("action", 'showProducts');
 
-//        jQuery('#current_row').val(jQuery('#current_row').val() + 5);
-        formData.append("current_row", jQuery('#current_row').val());
+        formData.append("action", 'showProducts');
+        formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("current_row", jQuery('#current_row').val());
+
+        jQuery('#products_table').attr('name', this.name);
         jQuery('#next_page_btn').attr('name', this.name);
         jQuery('#prev_page_btn').attr('name', this.name);
         jQuery('#items_per_page').attr('name', this.name);
+
+        jQuery('#file_form_div').show();
 
         jQuery.ajax({
             url: 'main.php',
@@ -48,11 +91,8 @@ jQuery(document).ready(function ($) {
                 return myXhr;
             },
             success: function (data) {
-//                var returnedData = json.parse(data);
-//                jQuery('#current_row').val(returnedData.row);
                 jQuery('#product_data').remove();
                 jQuery('#upload_div').hide();
-//                jQuery('#product_div').append(data);
                 jQuery('#product_div').append(data.html);
                 jQuery('#next_page_btn').show();
                 jQuery('#current_row').val(data.row);
@@ -103,7 +143,7 @@ jQuery(document).ready(function ($) {
 
         var formData = new FormData();
         formData.append("filename", this.value);
-        formData.append("action", 'checkFile');
+        formData.append("action", 'checkUploadFile');
         var filename = this.value;
 
         jQuery.ajax({
@@ -142,7 +182,56 @@ jQuery(document).ready(function ($) {
 
                 var index = filename.lastIndexOf("\\") + 1;
                 filename = "File : " + filename.substr(index);
-                jQuery('#file_name').text(filename);
+                jQuery('#upload_file_name').text(filename);
+            }
+        });
+    });
+
+    jQuery('#fileToExport').change(function () {
+
+        var myForm = jQuery('#export_file')[0];
+        var formData = new FormData(myForm);
+
+        formData.append("table_name", jQuery('#products_table').attr('name'));
+        formData.append("filename", this.value);
+        formData.append("action", 'checkExportFile');
+
+
+        var filename = this.value;
+
+        jQuery.ajax({
+            url: 'main.php',
+            type: 'post',
+            data: formData,
+            // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('progress').attr({
+                                value: e.loaded,
+                                max: e.total,
+                            });
+                        }
+                    }, false);
+                }
+                return myXhr;
+            },
+            success: function (data) {
+
+                if (data == 'true') {
+                    jQuery('#export_csv_btn').show();
+                }
+
+                var index = filename.lastIndexOf("\\") + 1;
+                filename = "File : " + filename.substr(index);
+                jQuery('#export_file_name').text(filename);
             }
         });
     });
@@ -304,13 +393,11 @@ jQuery(document).ready(function ($) {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
-        formData.append("table_name", this.name);
-//        formData.append("action", jQuery('#products_form').attr("action"));
-        formData.append("action", 'nextPage');
-//        jQuery('#current_row').val(jQuery('#current_row').val() + 5);
-        formData.append("current_row", jQuery('#current_row').val());
-        formData.append("ipp", jQuery("#items_per_page").val());
 
+        formData.append("action", 'nextPage');
+        formData.append("table_name", this.name);
+        formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
             url: 'main.php',
@@ -339,7 +426,6 @@ jQuery(document).ready(function ($) {
             },
             success: function (data) {
                 jQuery('#product_data').remove();
-//                jQuery('#product_div').append(data);
                 jQuery('#prev_page_btn').show();
                 jQuery('#product_div').append(data.html);
                 jQuery('#current_row').val(data.row);
@@ -351,14 +437,10 @@ jQuery(document).ready(function ($) {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
+
         formData.append("action", 'previousPage');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-//        if (jQuery('#current_row').val() < 5) {
-//            jQuery('#current_row').val(0);
-//        } else {
-//            jQuery('#current_row').val(jQuery('#current_row').val() - 5);
-//        }
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -388,7 +470,6 @@ jQuery(document).ready(function ($) {
             },
             success: function (data) {
                 jQuery('#product_data').remove();
-//                jQuery('#product_div').append(data);
                 jQuery('#product_div').append(data.html);
                 jQuery('#current_row').val(data.row);
                 if (data.row == 0) {
@@ -427,11 +508,10 @@ jQuery(document).ready(function ($) {
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
 
-        var items_per_page = jQuery("#items_per_page").val();
-        formData.append("current_row", jQuery('#current_row').val());
-        formData.append("ipp", jQuery("#items_per_page").val());
-        formData.append("table_name", this.name);
         formData.append("action", 'changeIPP');
+        formData.append("table_name", this.name);
+        formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
             url: 'main.php',
@@ -462,6 +542,55 @@ jQuery(document).ready(function ($) {
                 jQuery('#product_data').remove();
                 jQuery('#product_div').append(data.html);
 //                jQuery('#current_row').val(data.new_row);
+            }
+        });
+    });
+
+    jQuery("#product_div").on('change', '.selling_checkbox', function () {
+
+//        var myForm = jQuery('#products_form')[0];
+        var formData = new FormData();
+
+        formData.append("action", 'updateSelling');
+        formData.append("table_name", jQuery('#products_table').attr('name'));
+
+        var sellingList = {};
+
+        var id = jQuery(this).attr('data-id');
+        var isChecked = jQuery(this).prop('checked') ? true : false;
+        sellingList['id'] = id;
+        sellingList['checked'] = isChecked;
+
+        var str = JSON.stringify(sellingList);
+        formData.append("selling", str);
+
+        jQuery.ajax({
+            url: 'main.php',
+            type: 'post',
+            data: formData,
+            // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('progress').attr({
+                                value: e.loaded,
+                                max: e.total,
+                            });
+                        }
+                    }, false);
+                }
+                return myXhr;
+            },
+            success: function (data) {
+
             }
         });
     });

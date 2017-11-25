@@ -58,19 +58,18 @@ function createTable($conn, $table_name, $fields_array, $indices_array) {
 //        $file_path = $GLOBALS['res_file'];
 //        $resource = $table_name . '_headers';
 //        $headers = getResourceFromXML($file_path, $resource);
-
 //        $headers = getColumnsArray($table_name);
 
         $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (";
 
         foreach ($fields_array as $field => $type) {
-             if ($type === ""){
+            if ($type === "") {
                 $type = 'VARCHAR(255)';
-            } 
+            }
             $sql .= $field . "  " . $type . ",";
         }
-        foreach($indices_array as $index => $field){
-        $sql .= "{$index} ({$field}),";
+        foreach ($indices_array as $index => $field) {
+            $sql .= "{$field} ({$index}),";
         }
         $sql = rtrim($sql, ',');
         $sql .= ")";
@@ -110,7 +109,7 @@ function getTables() {
 function insertRow($conn, $data, $table_name, $concat) {
 
     $exclude = array();
-        
+
     foreach ($data as $key => $value) {
         if (!in_array($key, $exclude)) {
 
@@ -119,7 +118,7 @@ function insertRow($conn, $data, $table_name, $concat) {
             $assignments[] = "$key = $value";
         }
     }
-   
+
     $insert_assignments = implode(",", $assignments);
 
     $insert = "INSERT INTO $table_name SET $insert_assignments ";
@@ -141,13 +140,17 @@ function insertRow($conn, $data, $table_name, $concat) {
 
 function getRow($conn, $table_name, $row) {
 
-    $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}");
-    return $result;
+    $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
+    $data = $result->fetch_row();
+
+    if ($data != null) {
+        return $data;
+    } else {
+        return FALSE;
+    }
 }
 
 function getProductData($conn, $table_name, $start_row, $items_per_page) {
-
-//    $num_rows = $GLOBALS['num_rows'];
 
     $table = $table_name . '_groups';
     $groups_results = $conn->query("SELECT * FROM {$table} LIMIT {$start_row}, {$items_per_page}");
@@ -175,15 +178,25 @@ function getProductData($conn, $table_name, $start_row, $items_per_page) {
                         'Colour' => $variant_row['Colour'],
                         'Size' => $variant_row['Size']
                     ];
-
-//                    $final_row = array_merge($group_row, $variant_row);
-//                    $array[] = $final_row;
                 }
                 $array[] = $grouped_variants;
                 unset($grouped_variants);
             }
         }
         return $array;
+    } else {
+        return array("mysqli_error" => $conn->error);
+    }
+}
+
+function updateSellingDB($conn, $table_name, $selling_list) {
+
+    $checkbox = json_decode($selling_list, TRUE);
+    $update = "UPDATE {$table_name} SET Selling = {$checkbox['checked']} WHERE Product_ID = {$checkbox['id']}";
+
+    $sql = $update;
+    if ($conn->query($sql)) {
+        return TRUE;
     } else {
         return array("mysqli_error" => $conn->error);
     }

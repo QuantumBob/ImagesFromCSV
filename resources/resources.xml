@@ -100,8 +100,9 @@
         <header type="VARCHAR(255)">Image_10</header>
     </alterego_variants_headers>
     <alterego_groups_headers>
-        <header type="INT(10) UNSIGNED">Group_ID</header>
+        <header type="INT(10) UNSIGNED PRIMARY KEY">Group_ID</header>
         <header type="VARCHAR(255)">Base_SKU</header>
+        <header type="VARCHAR(255)">Name</header>
         <header type="VARCHAR(255)">Variant_IDs</header>
     </alterego_groups_headers>
     <alterego_indices>
@@ -134,4 +135,56 @@
         <size>XXL</size> 
         <size>S-L</size>
     </alterego_sizes>
+    <woo_headers>
+        <header>ID</header>
+        <header>Type</header>
+        <header>SKU</header>
+        <header>Name</header>
+        <header>Published</header>
+        <header>Is featured?</header>
+        <header>Visibility in catalogue</header>
+        <header>Short description</header>
+        <header>Description</header>
+        <header>Date sale price starts</header>
+        <header>Date sale price ends</header>
+        <header>Tax status</header>
+        <header>Tax class</header>
+        <header>In stock?</header>
+        <header>Stock</header>
+        <header>Backorders allowed?</header>
+        <header>Sold individually?</header>
+        <header>Weight (g)</header>
+        <header>Length (cm)</header>
+        <header>Width (cm)</header>
+        <header>Height (cm)</header>
+        <header>Allow customer reviews?</header>
+        <header>Purchase note</header>
+        <header>Sale price</header>
+        <header>Regular price</header>
+        <header>Categories</header>
+        <header>Tags</header>
+        <header>Shipping class</header>
+        <header>Images</header>
+        <header>Download limit</header>
+        <header>Download expiry days</header>
+        <header>Parent</header>
+        <header>Grouped products</header>
+        <header>Upsells</header>
+        <header>Cross-sells</header>
+        <header>External URL</header>
+        <header>Button text</header>
+        <header>Position</header>
+        <header>Trade Price</header>
+        <header>Material</header>
+        <header>Attribute 1 name</header>
+        <header>Attribute 1 value(s)</header>
+        <header>Attribute 1 visible</header>
+        <header>Attribute 1 global</header>
+        <header>Attribute 1 default</header>
+        <header>Attribute 2 name</header>
+        <header>Attribute 2 value(s)</header>
+        <header>Attribute 2 visible</header>
+        <header>Attribute 2 global</header>
+        <header>Attribute 2 default	</header>
+    </woo_headers>
 </resources>

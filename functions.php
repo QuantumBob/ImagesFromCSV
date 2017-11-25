@@ -19,14 +19,23 @@ function getFileList() {
     }
 }
 
-function doesFileExist($file_name) {
+function doesFileExist($file_name, $upload) {
 
-    $target_path = $GLOBALS['res_dir'] . $file_name;
+    if ($upload) {
+        $target_path = $GLOBALS['res_dir'] . $file_name;
 
-    if (file_exists($target_path)) {
-        return TRUE;
+        if (file_exists($target_path)) {
+            return TRUE;
+        } else {
+            return FALSE;
+        }
     } else {
-        return FALSE;
+        if (($handle = fopen("$file_name", "x")) !== FALSE) {
+            fclose($handle);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
     }
 }
 
@@ -53,7 +62,7 @@ function useCSV() {
 
 function uploadCSV($file_name) {
 
-    if(empty($file_name)){
+    if (empty($file_name)) {
         return FALSE;
     }
     $target_path = $GLOBALS['res_dir'];
@@ -135,16 +144,16 @@ function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) {
         while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
 
             $data_size = count($data);
-            if($data_size < 34){
+            if ($data_size < 34) {
                 $result = array_pad($data, 34, "");
-                $data =$result;
+                $data = $result;
             }
-            if ($data_size > 34){
+            if ($data_size > 34) {
                 $result = array_slice($data, 0, 34);
                 $data = $result;
             }
             $keyed_data = array_combine($all_headers, $data);
-            
+
             // still have problem at product id 104. Next line is 
             if ($keyed_data['Product_ID'] == 0) {
                 return FALSE;
@@ -200,6 +209,7 @@ function process_groups($data, $group_headers) {
 
     $data ['Base_SKU'] = getBaseSKU($data['SKU']);
     $data['Variant_IDs'] = $data['Product_ID'];
+    $data['Name'] = getBaseName($data['Name']);
 
     foreach ($group_headers as $header) {
         $new_data[$header] = $data[$header];
@@ -222,6 +232,20 @@ function getImageFromWeb($file_url) {
         copy($file_url, $image_path);
     }
     return $image_path;
+}
+
+function getBaseName($name) {
+    
+    $resource_file = $GLOBALS['res_file'];
+    $colours = getResourceFromXML($resource_file, 'alterego_colours');
+
+    foreach ($colours as $colour) {
+        $index = stripos($name, $colour);
+        if ($index !== FALSE) {
+            $base_name = substr($name, 0, $index);         
+            return $base_name;
+        }
+    }
 }
 
 function splitSKU($sku) {
@@ -298,17 +322,16 @@ function updateDB() {
     createTable($conn, $table_name . '_variants', $fields_array, $indices_array);
     // create product groups table
     $primary_key = 'Base_SKU';
-    unset($added_columns);
-    createTable($conn, $table_name . '_groups', $added_columns, $primary_key);
+    $fields_array = getResourceFromXML($GLOBALS['res_file'], $table_name . '_groups_headers', 'type');
+    unset($indices_array);
+    createTable($conn, $table_name . '_groups', $fields_array, $indices_array);
 
     populateTableFromCSV($conn, $file_name);
 }
 
 function showProducts($start_row, $items_per_page) {
 
-    session_start();
-//    $row = $_SESSION['row'] = $_POST['current_row'];
-    if($start_row < 0){
+    if ($start_row < 0) {
         $start_row = 0;
     }
     $pos = stripos($_POST['table_name'], '_');
@@ -372,10 +395,10 @@ function product_data_to_html2($data) {
             $html_array[] = '<span class="left-span">Price : £<label id="price_' . $variant['Product_ID'] . '">' . $variant['Price_RRP'] . '</label></span>';
             $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $variant['Product_ID'] . '">' . $variant['Trade_Price'] . '</label></span>';
 
-            if ($array[$keys[0]]['Selling'] === TRUE) {
-                $html_array[] = '<span class="left-span">Selling : <input id="checkbox_' . $variant['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $variant['Product_ID'] . '" checked></span>';
+            if ($array[$keys[0]]['Selling'] == TRUE) {
+                $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $variant['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $variant['Product_ID'] . '" checked></span>';
             } else {
-                $html_array[] = '<span class="left-span">Selling : <input id="checkbox_' . $variant['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $variant['Product_ID'] . '"></span>';
+                $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $variant['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $variant['Product_ID'] . '"></span>';
             }
             $html_array[] = '</div>'; // table-row
             $html_array[] = '<div class="table-row">';
@@ -486,10 +509,69 @@ function product_data_to_html($data) {
     return $html_array;
 }
 
-function getNextPage(){
+function updateSelling() {
+
+    $table_name = $_POST['table_name'];
+    $selling_list = $_POST['selling'];
+
+    $conn = openDB('rwk_productchooserdb');
+    updateSellingDB($conn, $table_name, $selling_list);
+}
+
+function exportToCSV() {
+
+    // get max number of rows in variants table
+    // get each row from groups table
+    // create variable product for that group
+    // get each variation from group
+    // if selling = true format row and put it in csv file
+    // go to next group
+    // download csv to local pc
+
+    $ini_val = ini_get('upload_tmp_dir');
+    $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
+    $table_name = $_POST['table_name'];
+    $pos = stripos($table_name, '_');
+    $groups_table = substr($table_name, 0, $pos) . '_groups';
+
+    $conn = openDB('rwk_productchooserdb');
+    $file_url = $temp_path . '/' . $table_name . '.csv';
+
+    $row = 0;
+    $max_id = get_num_rows($table_name);
+
+    if (($handle = fopen("$file_url", "w")) !== FALSE) {
+
+        $headers = getResourceFromXML($GLOBALS['res_file'], 'woo_headers');
+        $result = fputcsv($handle, $headers);
+        while (($result = getRow($conn, $groups_table, $row)) !== FALSE) {
+
+            create_variable_product($result);
+
+            $csv_line = process_row_for_export($result, $max_id);
+            fputcsv($handle, $csv_line);
+            $row ++;
+        }
+    }
+
+    fclose($handle);
+    return TRUE;
+}
+
+function create_variable_product($data) {
     
 }
 
-function getPreviousPage(){
-    
+function get_num_rows($table_name) {
+
+    $rowSQL = mysql_query("SELECT MAX( Product_ID ) AS max FROM $table_name;");
+    $row = mysql_fetch_array($rowSQL);
+    $largestNumber = $row['max'];
+    return $largestNumber;
+}
+
+function process_row_for_export($data, $max_id) {
+
+    $max_id = $max_id * 10;
+    $variable_array = [];
 }
