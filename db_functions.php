@@ -125,8 +125,12 @@ function insertRow($conn, $data, $table_name, $concat) {
     $duplicate = "ON DUPLICATE KEY ";
     $update = "UPDATE $insert_assignments";
     if ($concat) {
-        $if = "IF (INSTR(Variant_IDs, '{$data['Variant_IDs']}') > 0, Variant_IDs, CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}'))";
-        $update = "UPDATE Base_SKU = Base_SKU, Variant_IDs = $if";
+        $if_id = "IF (INSTR(Variant_IDs, '{$data['Variant_IDs']}') > 0, Variant_IDs, CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}'))";
+        $if_colour = "IF (INSTR(Colour, '{$data['Colour']}') > 0, Colour, CONCAT_WS(',', Colour, '{$data['Colour']}'))";
+        $if_size = "IF (INSTR(Size, '{$data['Size']}') > 0, Size, CONCAT_WS(',', Size, '{$data['Size']}'))";
+        $update = "UPDATE SKU = SKU, Name = Name, Variant_IDs = $if_id, Colour = $if_colour, Size = $if_size";
+//        $if = "IF (INSTR(Variant_IDs, '{$data['Variant_IDs']}') > 0, Variant_IDs, CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}', Colour, '{$data['Colour']}', Size, '{$data['Size']}'))";
+//        $update = "UPDATE SKU = SKU, Name = Name, Variant_IDs = $if";
 //        $update = "UPDATE Base_SKU = Base_SKU, Variant_IDs = CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}')";
     }
 
@@ -141,13 +145,23 @@ function insertRow($conn, $data, $table_name, $concat) {
 function getRow($conn, $table_name, $row) {
 
     $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
-    $data = $result->fetch_row();
+//    $data = $result->fetch_row();
+    $data = $result->fetch_assoc();
 
     if ($data != null) {
         return $data;
     } else {
         return FALSE;
     }
+}
+
+function getProductByID($table_name, $ID) {
+
+    $conn = openDB('rwk_productchooserdb');
+//    $table = $table_name . '_variants';
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID = {$ID}");
+//    return $result->fetch_row();
+    return $result->fetch_assoc();
 }
 
 function getProductData($conn, $table_name, $start_row, $items_per_page) {
@@ -200,4 +214,12 @@ function updateSellingDB($conn, $table_name, $selling_list) {
     } else {
         return array("mysqli_error" => $conn->error);
     }
+}
+
+function get_largest_id($table_name) {
+
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT MAX(Product_ID) AS max_id FROM $table_name");
+    $row = $result->fetch_assoc();
+    return $row['max_id'];
 }

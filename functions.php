@@ -207,15 +207,24 @@ function process_variants($data, $image_indexes, $variant_headers) {
 
 function process_groups($data, $group_headers) {
 
-    $data ['Base_SKU'] = getBaseSKU($data['SKU']);
-    $data['Variant_IDs'] = $data['Product_ID'];
+    $data ['SKU'] = getBaseSKU($data['SKU']);
     $data['Name'] = getBaseName($data['Name']);
 
     foreach ($group_headers as $header) {
         $new_data[$header] = $data[$header];
     }
 
+    $new_data['Variant_IDs'] = $data['Product_ID'];
+
     return $new_data;
+}
+
+function get_group_id_base($largest_id) {
+
+    $len = strlen($largest_id);
+    $base = pow(10, $len);
+
+    return $base;
 }
 
 function getImageFromWeb($file_url) {
@@ -235,14 +244,14 @@ function getImageFromWeb($file_url) {
 }
 
 function getBaseName($name) {
-    
+
     $resource_file = $GLOBALS['res_file'];
     $colours = getResourceFromXML($resource_file, 'alterego_colours');
 
     foreach ($colours as $colour) {
         $index = stripos($name, $colour);
         if ($index !== FALSE) {
-            $base_name = substr($name, 0, $index);         
+            $base_name = substr($name, 0, $index);
             return $base_name;
         }
     }
@@ -325,10 +334,20 @@ function updateDB() {
     $fields_array = getResourceFromXML($GLOBALS['res_file'], $table_name . '_groups_headers', 'type');
     unset($indices_array);
     createTable($conn, $table_name . '_groups', $fields_array, $indices_array);
-
+ 
     populateTableFromCSV($conn, $file_name);
+    
+    $fields_array = getResourceFromXML($GLOBALS['res_file'], 'woo_headers', 'type');
+    $field_array = spaces_to_underscore($fields_array);
+    $fields_array = array('MapFrom' => 'VARCHAR(255)') + $fields_array;
+    
+    createTable($conn, 'woo_map', $fields_array, $indices_array);
 }
 
+function spaces_to_underscore($array){
+    
+    
+}
 function showProducts($start_row, $items_per_page) {
 
     if ($start_row < 0) {
@@ -530,26 +549,36 @@ function exportToCSV() {
 
     $ini_val = ini_get('upload_tmp_dir');
     $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
-    $table_name = $_POST['table_name'];
-    $pos = stripos($table_name, '_');
-    $groups_table = substr($table_name, 0, $pos) . '_groups';
+    $variants_table = $_POST['table_name'];
+    $pos = stripos($variants_table, '_');
+    $table_name = substr($variants_table, 0, $pos);
 
     $conn = openDB('rwk_productchooserdb');
-    $file_url = $temp_path . '/' . $table_name . '.csv';
+    $file_url = $temp_path . '/' . $variants_table . '.csv';
 
     $row = 0;
-    $max_id = get_num_rows($table_name);
+    $max_id = get_largest_id($variants_table);
+    $group_id_base = get_group_id_base($max_id);
 
     if (($handle = fopen("$file_url", "w")) !== FALSE) {
 
-        $headers = getResourceFromXML($GLOBALS['res_file'], 'woo_headers');
-        $result = fputcsv($handle, $headers);
-        while (($result = getRow($conn, $groups_table, $row)) !== FALSE) {
+//        $group_headers = getResourceFromXML($GLOBALS['res_file'], $table_name . '_groups_headers');
+//        $variation_headers = getResourceFromXML($GLOBALS['res_file'], $table_name .  '_variants_headers');
+        $woo_headers = getResourceFromXML($GLOBALS['res_file'], 'woo_headers');
+        $result = fputcsv($handle, $woo_headers);
+        while (($result = getRow($conn, $table_name . '_groups', $row)) !== FALSE) {
 
-            create_variable_product($result);
+            $IDs = $result['Variant_IDs'];
 
-            $csv_line = process_row_for_export($result, $max_id);
-            fputcsv($handle, $csv_line);
+            $id_array = explode(',', $IDs);
+            $first_variation = getProductByID($table_name . '_variants', $id_array[0]);
+            $variable_product = create_variable_product($result, $first_variation, $table_name, $woo_headers, $group_id_base);
+            fputcsv($handle, $variable_product);
+            // now process all variations
+            foreach ($id_array as $ID) {
+                $variation = create_variation($table_name . '_variants', $ID);
+                fputcsv($handle, $variation);
+            }
             $row ++;
         }
     }
@@ -558,20 +587,32 @@ function exportToCSV() {
     return TRUE;
 }
 
-function create_variable_product($data) {
-    
+function create_variable_product($group, $variation, $table_name, $woo_headers, $group_id_base) {
+
+    $map = getResourceFromXML($GLOBALS['res_file'], $table_name . '_map', "woo");
+    $flipped_map = array_flip($map);
+    $result = array_flip($woo_headers);
+    $result = array_fill_keys(array_keys($result), "");
+
+    foreach ($woo_headers as $woo) {
+        if (array_key_exists($woo, $flipped_map)) {
+            if ($woo === 'Product_ID') {
+                $result[$woo] = $variation[$flipped_map[$woo]] + $group_id_base;
+            } else {
+                $result[$woo] = $variation[$flipped_map[$woo]];
+            }
+        }
+        if (array_key_exists($woo, $group)) {
+            $result[$woo] = $group[$flipped_map[$woo]];
+        }
+    }
+
+    return $array;
 }
 
-function get_num_rows($table_name) {
+function create_variation($table_name, $ID) {
 
-    $rowSQL = mysql_query("SELECT MAX( Product_ID ) AS max FROM $table_name;");
-    $row = mysql_fetch_array($rowSQL);
-    $largestNumber = $row['max'];
-    return $largestNumber;
-}
+    $array = getProductByID($table_name, $ID);
 
-function process_row_for_export($data, $max_id) {
-
-    $max_id = $max_id * 10;
-    $variable_array = [];
+    return $array;
 }

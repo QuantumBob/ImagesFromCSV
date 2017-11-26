@@ -100,9 +100,25 @@
         <header type="VARCHAR(255)">Image_10</header>
     </alterego_variants_headers>
     <alterego_groups_headers>
-        <header type="INT(10) UNSIGNED PRIMARY KEY">Group_ID</header>
-        <header type="VARCHAR(255)">Base_SKU</header>
+        <header type="INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY">Group_ID</header>
+        <header type="VARCHAR(255) UNIQUE">SKU</header>
         <header type="VARCHAR(255)">Name</header>
+        <header type="VARCHAR(255)">Type</header>
+        <header type="VARCHAR(255)">Selling</header>
+        <header type="VARCHAR(255)">Name</header>
+        <header type="VARCHAR(255)">Description</header>
+        <header type="VARCHAR(255)">Stock_Level</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Height</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Length</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Width</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Weight</header>
+        <header type="VARCHAR(255)">Categories</header>
+        <header type="VARCHAR(255)">Image</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Trade_Price</header>
+        <header type="VARCHAR(255)">Material</header>
+        <header type="VARCHAR(255)">Size</header>
+        <header type="VARCHAR(255)">Colour</header>
+        <header type="VARCHAR(255)">Description_HTML</header>
         <header type="VARCHAR(255)">Variant_IDs</header>
     </alterego_groups_headers>
     <alterego_indices>
@@ -136,55 +152,110 @@
         <size>S-L</size>
     </alterego_sizes>
     <woo_headers>
-        <header>ID</header>
-        <header>Type</header>
-        <header>SKU</header>
-        <header>Name</header>
-        <header>Published</header>
-        <header>Is featured?</header>
-        <header>Visibility in catalogue</header>
-        <header>Short description</header>
-        <header>Description</header>
-        <header>Date sale price starts</header>
-        <header>Date sale price ends</header>
-        <header>Tax status</header>
-        <header>Tax class</header>
-        <header>In stock?</header>
-        <header>Stock</header>
-        <header>Backorders allowed?</header>
-        <header>Sold individually?</header>
-        <header>Weight (g)</header>
-        <header>Length (cm)</header>
-        <header>Width (cm)</header>
-        <header>Height (cm)</header>
-        <header>Allow customer reviews?</header>
-        <header>Purchase note</header>
-        <header>Sale price</header>
-        <header>Regular price</header>
-        <header>Categories</header>
-        <header>Tags</header>
-        <header>Shipping class</header>
-        <header>Images</header>
-        <header>Download limit</header>
-        <header>Download expiry days</header>
-        <header>Parent</header>
-        <header>Grouped products</header>
-        <header>Upsells</header>
-        <header>Cross-sells</header>
-        <header>External URL</header>
-        <header>Button text</header>
-        <header>Position</header>
-        <header>Trade Price</header>
-        <header>Material</header>
-        <header>Attribute 1 name</header>
-        <header>Attribute 1 value(s)</header>
-        <header>Attribute 1 visible</header>
-        <header>Attribute 1 global</header>
-        <header>Attribute 1 default</header>
-        <header>Attribute 2 name</header>
-        <header>Attribute 2 value(s)</header>
-        <header>Attribute 2 visible</header>
-        <header>Attribute 2 global</header>
-        <header>Attribute 2 default	</header>
+        <header type="INT(10) UNSIGNED">ID</header>
+        <header type="VARCHAR(255)">Type</header>
+        <header type="VARCHAR(255)">SKU</header>
+        <header type="VARCHAR(255)">Name</header>
+        <header type="VARCHAR(255)">Published</header>
+        <header type="VARCHAR(255)">Is featured?</header>
+        <header type="VARCHAR(255)">Visibility in catalogue</header>
+        <header type="VARCHAR(255)">Short description</header>
+        <header type="VARCHAR(255)">Description</header>
+        <header type="VARCHAR(255)">Date sale price starts</header>
+        <header type="VARCHAR(255)">Date sale price ends</header>
+        <header type="VARCHAR(255)">Tax status</header>
+        <header type="VARCHAR(255)">Tax class</header>
+        <header type="VARCHAR(255)">In stock?</header>
+        <header type="VARCHAR(255)">Stock</header>
+        <header type="VARCHAR(255)">Backorders allowed?</header>
+        <header type="VARCHAR(255)">Sold individually?</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Weight (g)</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Length (cm)</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Width (cm)</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Height (cm)</header>
+        <header type="VARCHAR(255)">Allow customer reviews?</header>
+        <header type="VARCHAR(255)">Purchase note</header>
+        <header type="VARCHAR(255)">Sale price</header>
+        <header type="VARCHAR(255)">Regular price</header>
+        <header type="VARCHAR(255)">Categories</header>
+        <header type="VARCHAR(255)">Tags</header>
+        <header type="VARCHAR(255)">Shipping class</header>
+        <header type="VARCHAR(255)">Images</header>
+        <header type="VARCHAR(255)">Download limit</header>
+        <header type="VARCHAR(255)">Download expiry days</header>
+        <header type="INT(10) UNSIGNED">Parent</header>
+        <header type="VARCHAR(255)">Grouped products</header>
+        <header type="VARCHAR(255)">Upsells</header>
+        <header type="VARCHAR(255)">Cross-sells</header>
+        <header type="VARCHAR(255)">External URL</header>
+        <header type="VARCHAR(255)">Button text</header>
+        <header type="VARCHAR(255)">Position</header>
+        <header type="DECIMAL(10,2) UNSIGNED">Trade Price</header>
+        <header type="VARCHAR(255)">Material</header>
+        <header type="VARCHAR(255)">Attribute 1 name</header>
+        <header type="VARCHAR(255)">Attribute 1 value(s)</header>
+        <header type="VARCHAR(255)">Attribute 1 visible</header>
+        <header type="VARCHAR(255)">Attribute 1 global</header>
+        <header type="VARCHAR(255)">Attribute 1 default</header>
+        <header type="VARCHAR(255)">Attribute 2 name</header>
+        <header type="VARCHAR(255)">Attribute 2 value(s)</header>
+        <header type="VARCHAR(255)">Attribute 2 visible</header>
+        <header type="VARCHAR(255)">Attribute 2 global</header>
+        <header type="VARCHAR(255)">Attribute 2 default	</header>
     </woo_headers>
+    <alterego_map>
+        <header woo="ID">Product_ID</header> 
+        <header woo="Type">variable</header> 
+        <header woo="SKU">SKU</header> 
+        <header woo="Name">Name</header> 
+        <header woo="Published">Selling</header> 
+        <header woo="Is featured?"></header> 
+        <header woo="Visibility in catalogue"></header> 
+        <header woo="Short description"></header> 
+        <header woo="Description">Description</header> 
+        <header woo="Date sale price starts"></header> 
+        <header woo="Date sale price ends"></header> 
+        <header woo="Tax status"></header> 
+        <header woo="Tax class"></header> 
+        <header woo="In stock?">Stock_Level</header> 
+        <header woo="Stock"></header> 
+        <header woo="Backorders allowed?"></header> 
+        <header woo="Sold individually?"></header> 
+        <header woo="Weight (g)">Weight</header> 
+        <header woo="Length (cm)">Length</header> 
+        <header woo="Width (cm)">Width</header> 
+        <header woo="Height (cm)">Height</header> 
+        <header woo="Allow customer reviews?"></header> 
+        <header woo="Purchase note"></header> 
+        <header woo="Sale price"></header> 
+        <header woo="Regular price">Price_RRP</header> 
+        <header woo="Categories">Categories</header> 
+        <header woo="Tags"></header> 
+        <header woo="Shipping class"></header> 
+        <header woo="Images">Image</header> 
+        <header woo="Download limit"></header> 
+        <header woo="Download expiry days"></header> 
+        <header woo="Parent"></header> 
+        <header woo="Grouped products"></header> 
+        <header woo="Upsells"></header> 
+        <header woo="Cross-sells"></header> 
+        <header woo="External URL"></header> 
+        <header woo="Button text"></header> 
+        <header woo="Position"></header> 
+        <header woo="Trade Price">Trade_Price</header> 
+        <header woo="Material">Material</header> 
+        <header woo="Attribute 1 name">Colour</header> 
+        <header woo="Attribute 1 value(s)"></header> 
+        <header woo="Attribute 1 visible"></header> 
+        <header woo="Attribute 1 global"></header> 
+        <header woo="Attribute 1 default"></header> 
+        <header woo="Attribute 2 name">Size</header> 
+        <header woo="Attribute 2 value(s)"></header> 
+        <header woo="Attribute 2 visible"></header> 
+        <header woo="Attribute 2 global"></header> 
+        <header woo="Attribute 2 default"></header> 
+        <header woo="Meta: _material">Material</header> 
+        <header woo="Meta: _trade_price">Trade_Price</header> 
+        <header woo="Meta: _htmldesc">Description_HTML</header> 
+    </alterego_map>
 </resources>
