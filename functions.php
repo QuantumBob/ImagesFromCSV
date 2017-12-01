@@ -115,7 +115,6 @@ function headersToHtml2($headers) {
     return implode(" ", $html_array);
 }
 
-// parses csv and inputs data into main table and groups table
 function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) {
 
     $resources_dir = $GLOBALS['res_dir'];
@@ -164,7 +163,7 @@ function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) {
 
             insertRow($conn, $new_data, $table_name . '_variants', $concat);
 
-            $new_data = process_groups($keyed_data, $group_headers);
+            $new_data = process_groups($keyed_data, $image_indexes, $group_headers);
             $concat = TRUE;
             insertRow($conn, $new_data, $table_name . '_groups', $concat);
         }
@@ -205,7 +204,25 @@ function process_variants($data, $image_indexes, $variant_headers) {
     return $new_data;
 }
 
-function process_groups($data, $group_headers) {
+function process_groups($data, $image_indexes, $group_headers) {
+
+    foreach ($image_indexes as $index) {
+        if (isset($data[$index])) {
+            $image_array = explode(',', $data[$index]);
+            $compare_url = $image_array[0];
+
+            $image_name = getImageFromWeb($compare_url);
+            $data[$index] = $image_name;
+
+            foreach ($image_array as $image_url) {
+                if (strcasecmp($compare_url, $image_url) != 0) {
+                    /** Do something to allow multiple images inside one field
+                      $image_name = getImageFromWeb($image_url);
+                      $data[$index] = $image_name; */
+                }
+            }
+        }
+    }
 
     $data ['SKU'] = getBaseSKU($data['SKU']);
     $data['Name'] = getBaseName($data['Name']);
@@ -330,24 +347,41 @@ function updateDB() {
     $indices_array = getResourceFromXML($GLOBALS['res_file'], $table_name . '_indices', 'index');
     createTable($conn, $table_name . '_variants', $fields_array, $indices_array);
     // create product groups table
-    $primary_key = 'Base_SKU';
     $fields_array = getResourceFromXML($GLOBALS['res_file'], $table_name . '_groups_headers', 'type');
     unset($indices_array);
     createTable($conn, $table_name . '_groups', $fields_array, $indices_array);
- 
+
     populateTableFromCSV($conn, $file_name);
-    
+
     $fields_array = getResourceFromXML($GLOBALS['res_file'], 'woo_headers', 'type');
-    $field_array = spaces_to_underscore($fields_array);
+    $fields_array = spaces_to_underscore($fields_array, TRUE);
     $fields_array = array('MapFrom' => 'VARCHAR(255)') + $fields_array;
-    
+
     createTable($conn, 'woo_map', $fields_array, $indices_array);
 }
 
-function spaces_to_underscore($array){
-    
-    
+function spaces_to_underscore($array, $change_keys = FALSE) {
+
+    if ($change_keys) {
+        foreach ($array as $key => $value) {
+            $key = str_replace('?', '', $key);
+            $key = str_replace('(', '', $key);
+            $key = str_replace(')', '', $key);
+            $key = str_replace('-', '_', $key);
+            $new_array[str_replace(' ', '_', $key)] = $value;
+        }
+    } else {
+        foreach ($array as $key => $value) {
+            $value = str_replace('?', '', $value);
+            $value = str_replace('(', '', $value);
+            $value = str_replace(')', '', $value);
+            $key = str_replace('-', '_', $key);
+            $array[$key] = str_replace(' ', '_', $value);
+        }
+    }
+    return $new_array;
 }
+
 function showProducts($start_row, $items_per_page) {
 
     if ($start_row < 0) {
@@ -359,12 +393,12 @@ function showProducts($start_row, $items_per_page) {
     $conn = openDB('rwk_productchooserdb');
 
     $data = getProductData($conn, $table_name, $start_row, $items_per_page);
-    $html = product_data_to_html2($data);
+    $html = product_data_to_html($data);
 
     return implode(' ', $html);
 }
 
-function product_data_to_html2($data) {
+function product_data_to_html($data) {
 
     $html_array[] = '<div id=\'product_data\' class="base-layer">';
 
@@ -451,83 +485,6 @@ function product_data_to_html2($data) {
     return $html_array;
 }
 
-function product_data_to_html($data) {
-
-    $html_array[] = '<div id=\'product_data\' class="base-layer">';
-
-    foreach ($data as $array) {
-        $keys = array_keys($array);
-        $count = count($array);
-        $first_variant = $array[$keys[0]];
-        $first_id = $array[$keys[0]]['Product_ID'];
-
-        $html_array[] = '<div class="product_box">';
-
-        $html_array[] = '<div class="left-box">';
-
-        $html_array[] = '<div class="table-row">';
-        $html_array[] = '<div id="carousel_' . $first_id . '" class="carousel">';
-        $html_array[] = '<input id="left_btn_' . $first_id . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="left"/>';
-        $html_array[] = '<input id="right_btn_' . $first_id . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="right"/>';
-
-        $html_array[] = '<ul data-count="' . $count . '">';
-
-        if ($count === 0) {
-            //use 'image coming soon placeholder
-            $no_image = './image_coming_soon.jpg';
-            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-        } else {
-            foreach ($array as $variant) {
-                $html_array[] = '<li><img id="image_' . $variant['Product_ID'] . '" class="image" src="' . $variant['Image'] . '"></li>';
-            }
-        }
-        $html_array[] = '</ul>';
-
-        $html_array[] = '</div>'; // carousel
-        $html_array[] = '</div>'; //table-row
-        $html_array[] = '</div>'; // left-box
-
-        $html_array[] = '<div class="right-box">';
-
-        $html_array[] = '<div class="table-row">';
-        $html_array[] = '<span class="left-span">Name : <label id="name_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Name'] . '</label></span>';
-        $html_array[] = '<span class="left-span">Price : £<label id="price_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Price_RRP'] . '</label></span>';
-        $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Trade_Price'] . '</label></span>';
-        $html_array[] = '</div>';
-
-        $html_array[] = '<div class="table-row">';
-        if ($array[$keys[0]]['Selling'] === TRUE) {
-            $html_array[] = '<span class="left-span">Selling : <input id="checkbox_' . $array[$keys[0]]['Product_ID'] . '" type="checkbox" checked></span>';
-        } else {
-            $html_array[] = '<span class="left-span">Selling : <input id="checkbox_' . $array[$keys[0]]['Product_ID'] . '" type="checkbox" ></span>';
-        }
-        $html_array[] = '<span class="left-span">Product ID : <label id="product_id_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Product_ID'] . '</label></span>';
-        $html_array[] = '<span class="left-span">SKU : <label id="sku_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['SKU'] . '</label></span>';
-        $html_array[] = '</div>';
-
-        $html_array[] = '<div class="table-row">';
-        $html_array[] = '<span class="left-span">Variations</span>';
-        $html_array[] = '<span class="left-span">Size : <label id="size_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Size'] . '</label></span>';
-        $html_array[] = '<span class="left-span">Colour : <label id="colour_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Colour'] . '</label></span>';
-        $html_array[] = '</div>';
-
-        $html_array[] = '<div class="table-row">';
-        $html_array[] = '<p class="left-span"><label id="description_' . $array[$keys[0]]['Product_ID'] . '">' . $array[$keys[0]]['Description'] . '</label></p>';
-        $html_array[] = '</div>';
-
-        $html_array[] = '</div>'; // right-box
-        $html_array[] = '</div>'; // product-box
-        /*
-          $pos = stripos($array['Image'], '.jpg');
-          if ($pos !== FALSE){
-          $array[Image] = substr_replace($array[Image], '-150x150', $pos, 0);
-          } */
-    }
-    $html_array[] = '</div>'; // base-layer
-
-    return $html_array;
-}
-
 function updateSelling() {
 
     $table_name = $_POST['table_name'];
@@ -538,14 +495,6 @@ function updateSelling() {
 }
 
 function exportToCSV() {
-
-    // get max number of rows in variants table
-    // get each row from groups table
-    // create variable product for that group
-    // get each variation from group
-    // if selling = true format row and put it in csv file
-    // go to next group
-    // download csv to local pc
 
     $ini_val = ini_get('upload_tmp_dir');
     $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
@@ -562,22 +511,15 @@ function exportToCSV() {
 
     if (($handle = fopen("$file_url", "w")) !== FALSE) {
 
-//        $group_headers = getResourceFromXML($GLOBALS['res_file'], $table_name . '_groups_headers');
-//        $variation_headers = getResourceFromXML($GLOBALS['res_file'], $table_name .  '_variants_headers');
-        $woo_headers = getResourceFromXML($GLOBALS['res_file'], 'woo_headers');
+        $woo_headers = array_keys(getResourceFromXML($GLOBALS['res_file'], $table_name .  '_map', 'map'));
+
         $result = fputcsv($handle, $woo_headers);
-        while (($result = getRow($conn, $table_name . '_groups', $row)) !== FALSE) {
+        while (($group = getRow($conn, $table_name . '_groups', $row)) !== FALSE) {
 
-            $IDs = $result['Variant_IDs'];
-
-            $id_array = explode(',', $IDs);
-            $first_variation = getProductByID($table_name . '_variants', $id_array[0]);
-            $variable_product = create_variable_product($result, $first_variation, $table_name, $woo_headers, $group_id_base);
-            fputcsv($handle, $variable_product);
-            // now process all variations
-            foreach ($id_array as $ID) {
-                $variation = create_variation($table_name . '_variants', $ID);
-                fputcsv($handle, $variation);
+            $variations = getProductByID($table_name . '_variants', $group['Variant_IDs']);
+            $variable_products = create_variable_product($group, $variations, $table_name, $woo_headers, $group_id_base);
+            foreach ($variable_products as $product) {
+                fputcsv($handle, $product);
             }
             $row ++;
         }
@@ -587,32 +529,80 @@ function exportToCSV() {
     return TRUE;
 }
 
-function create_variable_product($group, $variation, $table_name, $woo_headers, $group_id_base) {
+function create_variable_product($group, $variations, $table_name, $woo_headers, $group_id_base) {
 
-    $map = getResourceFromXML($GLOBALS['res_file'], $table_name . '_map', "woo");
-    $flipped_map = array_flip($map);
-    $result = array_flip($woo_headers);
-    $result = array_fill_keys(array_keys($result), "");
+    $map = getResourceFromXML($GLOBALS['res_file'], $table_name . '_map', "map", TRUE);
 
-    foreach ($woo_headers as $woo) {
-        if (array_key_exists($woo, $flipped_map)) {
-            if ($woo === 'Product_ID') {
-                $result[$woo] = $variation[$flipped_map[$woo]] + $group_id_base;
-            } else {
-                $result[$woo] = $variation[$flipped_map[$woo]];
+    foreach ($map as $wookey => $woovalue) {
+
+        if (stripos($wookey, 'attribute') !== FALSE) {
+            if ($woovalue !== 'Skip') {
+                $num = intval(preg_replace('/[^0-9]+/', '', $wookey), 10);
+                $new_array[$wookey] = $woovalue;
+                if (isset($new_array['Attribute ' . $num . ' value(s)'])) {
+                    $new_array['Attribute ' . $num . ' value(s)'] = $new_array['Attribute ' . $num . ' value(s)'] . ', ' . $group[$woovalue];
+                } else {
+                    $new_array['Attribute ' . $num . ' value(s)'] = $group[$woovalue];
+                }
+                $new_array['Attribute ' . $num . ' visible'] = 1;
+                $new_array['Attribute ' . $num . ' global'] = 1;
+                $new_array['Attribute ' . $num . ' default'] = $group[$woovalue];
             }
+        } else {
+            $new_array[$wookey] = $woovalue == "" ? "" : $group[$woovalue];
         }
-        if (array_key_exists($woo, $group)) {
-            $result[$woo] = $group[$flipped_map[$woo]];
+    }
+    $new_array['Type'] = 'variable';
+    $new_array['Published'] = '1';
+    $new_array['Is featured?'] = '0';
+    $new_array['Visibility in catalogue'] = 'visible';
+    $new_array['Backorders allowed?'] = '0';
+    $new_array['Sold individually?'] = '0';
+    $new_array['Allow customer reviews?'] = '0';
+    $new_array['Position'] = '0';
+    $new_array['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($group['Image'], '.');
+//    $new_array['ID'] = $group['Group_ID'] + $group_id_base;
+
+    $results[] = $new_array;
+
+    foreach ($variations as $variation) {
+        if ($variation['Selling'] === '1') {
+            foreach ($map as $wookey => $woovalue) {
+                if ($wookey === 'SKU') {
+                    $variation[$woovalue] = str_replace('/', '', $variation[$woovalue]);
+                }
+                if (stripos($wookey, 'attribute') !== FALSE) {
+                    if ($woovalue !== 'Skip') {
+                        $num = intval(preg_replace('/[^0-9]+/', '', $wookey), 10);
+                        $new_array[$wookey] = $woovalue;
+                        $key = 'Attribute ' . $num . ' value(s)';
+                        $new_array[$key] = $variation[$woovalue];
+                        $new_array['Attribute ' . $num . ' visible'] = 1;
+                        $key = 'Attribute ' . $num . ' global';
+                        $new_array[$key] = 1;
+                        $key = 'Attribute ' . $num . ' default';
+                        $new_array[$key] = $variation[$woovalue];
+                    }
+                } else {
+                    $new_array[$wookey] = $woovalue == "" ? "" : $variation[$woovalue];
+                }
+            }
+            $new_array['Type'] = 'variation';
+            $new_array['Published'] = '1';
+            $new_array['Is featured?'] = '0';
+            $new_array['Visibility in catalogue'] = 'visible';
+            $new_array['Backorders allowed?'] = '0';
+            $new_array['Sold individually?'] = '0';
+            $new_array['Allow customer reviews?'] = '0';
+            $new_array['Position'] = '0';
+            $new_array['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($variation['Image'], '.');
+            $new_array['Parent'] = $group['SKU'];
+//            $new_array['Parent'] = $group['Group_ID'] + $group_id_base;
+
+            $results[] = $new_array;
         }
     }
 
-    return $array;
+    return $results;
 }
 
-function create_variation($table_name, $ID) {
-
-    $array = getProductByID($table_name, $ID);
-
-    return $array;
-}

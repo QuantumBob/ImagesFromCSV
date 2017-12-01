@@ -157,11 +157,9 @@ function getRow($conn, $table_name, $row) {
 
 function getProductByID($table_name, $ID) {
 
-    $conn = openDB('rwk_productchooserdb');
-//    $table = $table_name . '_variants';
-    $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID = {$ID}");
-//    return $result->fetch_row();
-    return $result->fetch_assoc();
+        $conn = openDB('rwk_productchooserdb');
+        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
+        return $result->fetch_all(MYSQLI_ASSOC);
 }
 
 function getProductData($conn, $table_name, $start_row, $items_per_page) {

@@ -34,7 +34,7 @@ function openXMLFile() {
     return $reader;
 }
 
-function getResourceFromXML($file_path, $resource, $attr = "") {
+function getResourceFromXML($file_path, $resource, $attr = "", $add_empty = FALSE) {
 
     $reader = new XMLReader;
     $reader->open($file_path);
