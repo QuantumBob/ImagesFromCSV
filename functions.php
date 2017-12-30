@@ -382,17 +382,18 @@ function spaces_to_underscore($array, $change_keys = FALSE) {
     return $new_array;
 }
 
-function showProducts($start_row, $items_per_page) {
+function showProducts($start_group_id, $items_per_page, $filter = FALSE) {
 
-    if ($start_row < 0) {
-        $start_row = 0;
+    // for $start_row read group_id
+    if ($start_group_id < 0) {
+        $start_group_id = 0;
     }
     $pos = stripos($_POST['table_name'], '_');
     $table_name = substr($_POST['table_name'], 0, $pos);
 
     $conn = openDB('rwk_productchooserdb');
 
-    $data = getProductData($conn, $table_name, $start_row, $items_per_page);
+    $data = getProductData($conn, $table_name, $start_group_id, $items_per_page, $filter);
     $html = product_data_to_html($data);
 
     return implode(' ', $html);
@@ -511,13 +512,13 @@ function exportToCSV() {
 
     if (($handle = fopen("$file_url", "w")) !== FALSE) {
 
-        $woo_headers = array_keys(getResourceFromXML($GLOBALS['res_file'], $table_name .  '_map', 'map'));
+        $woo_headers = array_keys(getResourceFromXML($GLOBALS['res_file'], $table_name . '_map', 'map'));
 
         $result = fputcsv($handle, $woo_headers);
         while (($group = getRow($conn, $table_name . '_groups', $row)) !== FALSE) {
 
             $variations = getProductByID($table_name . '_variants', $group['Variant_IDs']);
-            $variable_products = create_variable_product($group, $variations, $table_name, $woo_headers, $group_id_base);
+            $variable_products = create_variable_product($group, $variations, $table_name);
             foreach ($variable_products as $product) {
                 fputcsv($handle, $product);
             }
@@ -529,7 +530,7 @@ function exportToCSV() {
     return TRUE;
 }
 
-function create_variable_product($group, $variations, $table_name, $woo_headers, $group_id_base) {
+function create_variable_product($group, $variations, $table_name) {
 
     $map = getResourceFromXML($GLOBALS['res_file'], $table_name . '_map', "map", TRUE);
 
@@ -561,12 +562,14 @@ function create_variable_product($group, $variations, $table_name, $woo_headers,
     $new_array['Allow customer reviews?'] = '0';
     $new_array['Position'] = '0';
     $new_array['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($group['Image'], '.');
-//    $new_array['ID'] = $group['Group_ID'] + $group_id_base;
 
     $results[] = $new_array;
 
+    $variations_count = 0;
+
     foreach ($variations as $variation) {
         if ($variation['Selling'] === '1') {
+            $variations_count++;
             foreach ($map as $wookey => $woovalue) {
                 if ($wookey === 'SKU') {
                     $variation[$woovalue] = str_replace('/', '', $variation[$woovalue]);
@@ -597,12 +600,32 @@ function create_variable_product($group, $variations, $table_name, $woo_headers,
             $new_array['Position'] = '0';
             $new_array['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($variation['Image'], '.');
             $new_array['Parent'] = $group['SKU'];
-//            $new_array['Parent'] = $group['Group_ID'] + $group_id_base;
 
             $results[] = $new_array;
         }
     }
 
-    return $results;
+    if ($variations_count > 0) {
+        return $results;
+    } else {
+        return null;
+    }
 }
 
+function generateFilters() {
+
+    $html_array[] = '<select id="filter_type"  name="filter_type">';
+    $html_array[] = ' <option name="all"value="All" selected>All</option>';
+    $html_array[] = ' <option name="stock_green" value="Stock_Level = green">Stock Level Green</option>';
+    $html_array[] = '<option name="stock_amber" value="Stock_Level = amber">Stock Level Amber</option>';
+    $html_array[] = '<option name="stock_red" value="Stock_Level = red">Stock Level Red</option>';
+    $html_array[] = '<option name="stock_discontinued" value="Stock_Type = Discontinued">Stock Type Discontinued</option>';
+    $html_array[] = '<option name="stock_pre_order" value="Stock_Type = Pre-Order Continuity">Stock Type Pre Order</option>';
+    $html_array[] = '<option name="stock_line" value="Stock_Type = Stock Line">Stock Type Stock Line</option>';
+    $html_array[] = '<option name="brand" value="Brand = Bassaya">Bassaya</option>';
+    $html_array[] = '<option name="brand" value="Brand = Avanua">Avanua</option>';
+    $html_array[] = '<option name="brand" value="Brand = Roza">Roza</option>';
+    $html_array[] = '</select>';
+
+    echo implode(' ', $html_array);
+}

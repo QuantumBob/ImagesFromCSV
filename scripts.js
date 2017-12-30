@@ -56,7 +56,8 @@ jQuery(document).ready(function ($) {
         formData.append("action", 'showProducts');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-        formData.append("current_row", jQuery('#current_row').val());
+         formData.append("filter", jQuery("#filter_type").val());
+        formData.append("current_row", jQuery('#current_row').val()); // for current_row read group_id
 
         jQuery('#products_table').attr('name', this.name);
         jQuery('#next_page_btn').attr('name', this.name);
@@ -397,6 +398,7 @@ jQuery(document).ready(function ($) {
         formData.append("action", 'nextPage');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("filter", jQuery("#filter_type").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -441,6 +443,7 @@ jQuery(document).ready(function ($) {
         formData.append("action", 'previousPage');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("filter", jQuery("#filter_type").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -511,6 +514,51 @@ jQuery(document).ready(function ($) {
         formData.append("action", 'changeIPP');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
+        formData.append("filter", jQuery("#filter_type").val());
+        formData.append("current_row", jQuery('#current_row').val());
+
+        jQuery.ajax({
+            url: 'main.php',
+            type: 'post',
+            data: formData,
+            // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            // Custom XMLHttpRequest
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    // For handling the progress of the upload
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            $('progress').attr({
+                                value: e.loaded,
+                                max: e.total,
+                            });
+                        }
+                    }, false);
+                }
+                return myXhr;
+            },
+            success: function (data) {
+                jQuery('#product_data').remove();
+                jQuery('#product_div').append(data.html);
+//                jQuery('#current_row').val(data.new_row);
+            }
+        });
+    });
+    
+     jQuery("#filter_type").change(function () {
+
+        var myForm = jQuery('#products_form')[0];
+        var formData = new FormData(myForm);
+
+        formData.append("action", 'changeFilter');
+        formData.append("table_name", this.name);
+        formData.append("filter", jQuery("#filter_type").val());
+         formData.append("ipp", jQuery("#items_per_page").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({

@@ -99,7 +99,7 @@ function getTables() {
 
     $html = array();
     foreach ($result as $table) {
-        if (stripos($table['table_name'], '_groups') === FALSE) {
+        if (stripos($table['table_name'], '_groups') === FALSE && stripos($table['table_name'], '_map') === FALSE) {
             $html[] = "<input id='{$table['table_name']}' class='button_class gen_table_btn'  type='button' name= '{$table['table_name']}' value='{$table['table_name']}' />";
         }
     }
@@ -157,13 +157,67 @@ function getRow($conn, $table_name, $row) {
 
 function getProductByID($table_name, $ID) {
 
-        $conn = openDB('rwk_productchooserdb');
-        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
-        return $result->fetch_all(MYSQLI_ASSOC);
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 
-function getProductData($conn, $table_name, $start_row, $items_per_page) {
+function getProductData($conn, $table_name, $group_id, $items_per_page, $filter, $previous_page = FALSE) {
 
+    // for $start_row read group_id
+    $product_count = 0;
+    $table = $table_name . '_groups';
+    $groups_results = $conn->query("SELECT Group_ID, Variant_IDs FROM {$table}");
+
+    if ($groups_results !== FALSE) {
+
+        $table = $table_name . '_variants';
+
+        foreach ($groups_results as $group_row) {
+            if ($group_row['Group_ID'] > $group_id) {
+                $sql_str = "SELECT * FROM {$table} WHERE Product_ID IN ({$group_row['Variant_IDs']}";
+
+                if ($filter !== FALSE AND $filter !== 'All') {
+                    $sql_str .= "AND {$filter})";
+                } else {
+                    $sql_str .= ")";
+                }
+                $variant_results = $conn->query($sql_str);
+
+                if ($variant_results !== FALSE) {
+                    $product_count ++;
+                    foreach ($variant_results as $variant_row) {
+                        $grouped_variants[$variant_row['Product_ID']] = [
+                            'Selling' => $variant_row['Selling'],
+                            'Product_ID' => $variant_row['Product_ID'],
+                            'Name' => $variant_row['Name'],
+                            'SKU' => $variant_row['SKU'],
+                            'Price_RRP' => $variant_row['Price_RRP'],
+                            'Trade_Price' => $variant_row['Trade_Price'],
+                            'Description' => $variant_row['Description'],
+                            'Image' => $variant_row['Image'],
+                            'Colour' => $variant_row['Colour'],
+                            'Size' => $variant_row['Size']
+                        ];
+                    }
+                    $array[] = $grouped_variants;
+                    unset($grouped_variants);
+                    $_POST['current_row'] = $group_row['Group_ID'];
+                    if ($product_count >= $items_per_page) {
+                        break;
+                    }
+                }              
+            }
+        }
+        return $array;
+    } else {
+        return array("mysqli_error" => $conn->error);
+    }
+}
+
+function getProductData_OLD($conn, $table_name, $start_row, $items_per_page, $filter) {
+
+    $product_count = 0;
     $table = $table_name . '_groups';
     $groups_results = $conn->query("SELECT * FROM {$table} LIMIT {$start_row}, {$items_per_page}");
 
@@ -173,10 +227,17 @@ function getProductData($conn, $table_name, $start_row, $items_per_page) {
 
         foreach ($groups_results as $group_row) {
             $variants[] = $group_row['Variant_IDs'];
-            $variant_results = $conn->query("SELECT * FROM {$table} WHERE Product_ID IN ({$group_row['Variant_IDs']})");
+            $sql_str = "SELECT * FROM {$table} WHERE Product_ID IN ({$group_row['Variant_IDs']}";
+
+            if ($filter !== FALSE AND $filter !== 'All') {
+                $sql_str .= "AND {$filter})";
+            } else {
+                $sql_str .= ")";
+            }
+            $variant_results = $conn->query($sql_str);
 
             if ($variant_results !== FALSE) {
-
+                $product_count ++;
                 foreach ($variant_results as $variant_row) {
                     $grouped_variants[$variant_row['Product_ID']] = [
                         'Selling' => $variant_row['Selling'],

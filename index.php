@@ -59,6 +59,7 @@ include 'main.php';
                 </form>
             </div>
             <form id="products_form" name="products_form" method="POST" action="showProducts">
+                <!--for current_row read group_id-->
                 <input id="current_row" type="hidden" name="current_row" value="0" />
                 <input id="products_table" type="hidden" name="table_name" value="0" />
                 <input id="next_page_btn" class="button_class align_right"type="button" name= 'next_page_btn' value="Next Page" hidden />
@@ -70,6 +71,7 @@ include 'main.php';
                     <option name="50_ipp" value="50">50</option>
                 </select>
                 <?php getTables(); ?>
+                <?php generateFilters(); ?>
                 <p></p>
             </form>
         </div>

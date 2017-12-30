@@ -25,7 +25,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             }
             break;
 
-        case 'checkExportFile' :           
+        case 'checkExportFile' :
 //            if (doesFileExist(basename($_POST['filename']), FALSE)) {
             echo 'true';
 //            } else {
@@ -36,14 +36,25 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'changeIPP' :
 
             $start_row = $_POST['current_row'];
-//            $GLOBALS['num_rows'] = $_POST['ipp'];
             $items_per_page = $_POST['ipp'];
-            $html = showProducts($start_row, $items_per_page);
+            $filter = $_POST['filter'];
+            $html = showProducts($start_row, $items_per_page, $filter);
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
             echo $json;
-//            echo $html;
+            break;
+
+        case 'changeFilter' :
+
+            $start_row = $_POST['current_row'];
+            $items_per_page = $_POST['ipp'];
+            $filter = $_POST['filter'];
+            $html = showProducts($start_row, $items_per_page, $filter);
+
+            $return = array('row' => $start_row, 'html' => $html);
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
+            echo $json;
             break;
 
         case 'showTables' :
@@ -69,7 +80,10 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'showProducts' :
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
-            $html = showProducts($start_row, $items_per_page);
+            $filter = $_POST['filter'];
+            $html = showProducts($start_row, $items_per_page, $filter);
+            
+            $start_row = $_POST['current_row'];
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
@@ -79,29 +93,31 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'nextPage' :
 //            getNextPage();
             $items_per_page = $_POST['ipp'];
-            $start_row = $_POST['current_row'] + $items_per_page;
+            $start_row = $_POST['current_row'];// + $items_per_page;
+            $filter = $_POST['filter'];
 //            $selling_list = json_decode($_POST['selling'], true);
 //            updateSelling($selling_list);
 
-            $html = showProducts($start_row, $items_per_page);
+            $html = showProducts($start_row, $items_per_page, $filter);
+            
+            $start_row = $_POST['current_row'];
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
             echo $json;
-//            echo $html;
             break;
 
         case 'previousPage' :
 //            getPreviousPage();
             $items_per_page = $_POST['ipp'];
             $start_row = $_POST['current_row'] - $items_per_page;
+            $filter = $_POST['filter'];
 
-            $html = showProducts($start_row, $items_per_page);
+            $html = showProducts($start_row, $items_per_page, $filter, TRUE);
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
             echo $json;
-//            echo $html;
             break;
 
         case 'updateSelling' :
