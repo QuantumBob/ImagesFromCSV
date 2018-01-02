@@ -245,8 +245,10 @@ function getProductData($conn, $table_name, $group_id, $items_per_page, $filter,
 //
 //            $array[] = $grouped_variants;
 //            unset($grouped_variants);
-            $_POST['current_row'] = $product_count - $items_per_page;
+            $current_row = $product_count - $items_per_page;
+            
             if ($product_count >= $items_per_page) {
+                $_POST['current_row'] = (string)$current_row;
                 break;
             }
         }

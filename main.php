@@ -82,26 +82,25 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             $items_per_page = $_POST['ipp'];
             $filter = $_POST['filter'];
             $html = showProducts($start_row, $items_per_page, $filter);
-            
+
             $start_row = $_POST['current_row'];
 
-            $return = array('row' => 0, 'html' => "html");
-//             $return = array('row' => $start_row, 'html' => $html);
+            $return = array('row' => $start_row);//, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
-            $json = "{'row':0, 'html':'<br>'}";
+            
             echo $json;
             break;
 
         case 'nextPage' :
 //            getNextPage();
             $items_per_page = $_POST['ipp'];
-            $start_row = $_POST['current_row'];// + $items_per_page;
+            $start_row = $_POST['current_row']; // + $items_per_page;
             $filter = $_POST['filter'];
 //            $selling_list = json_decode($_POST['selling'], true);
 //            updateSelling($selling_list);
 
             $html = showProducts($start_row, $items_per_page, $filter);
-            
+
             $start_row = $_POST['current_row'];
 
             $return = array('row' => $start_row, 'html' => $html);
