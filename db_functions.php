@@ -51,15 +51,10 @@ function openDB($db_name) {
 }
 
 function createTable($conn, $table_name, $fields_array, $indices_array) {
+
     $result = $conn->query("SHOW TABLES LIKE " . $table_name);
 
     if ($result === FALSE) {
-        // create the table
-//        $file_path = $GLOBALS['res_file'];
-//        $resource = $table_name . '_headers';
-//        $headers = getResourceFromXML($file_path, $resource);
-//        $headers = getColumnsArray($table_name);
-
         $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (";
 
         foreach ($fields_array as $field => $type) {
@@ -142,6 +137,50 @@ function insertRow($conn, $data, $table_name, $concat) {
     }
 }
 
+function mysql_insert_array($table, $data, $exclude = array()) {
+
+    $fields = $values = array();
+    if (!is_array($exclude))
+        $exclude = array($exclude);
+    foreach (array_keys($data) as $key) {
+        if (!in_array($key, $exclude)) {
+            $fields[] = "`$key`";
+            $values[] = "'" . mysql_real_escape_string($data[$key]) . "'";
+        }
+    }
+    $fields = implode(",", $fields);
+    $values = implode(",", $values);
+    if (mysql_query("INSERT INTO `$table` ($fields) VALUES ($values)")) {
+        return array("mysql_error" => false,
+            "mysql_insert_id" => mysql_insert_id(),
+            "mysql_affected_rows" => mysql_affected_rows(),
+            "mysql_info" => mysql_info()
+        );
+    } else {
+        return array("mysql_error" => mysql_error());
+    }
+}
+
+function insertData($conn, $data, $table) {
+
+    if (is_array($data)) {
+        foreach ($data as $key => $value) {
+            $value = $conn->real_escape_string($value);
+            $value = "'$value'";
+            $assignments[] = "$key = $value";
+        }
+
+        $insert = implode(',', $assignments);
+        $sql = "INSERT INTO $table SET" . $insert;
+    }
+
+    if ($conn->query($sql)) {
+        return TRUE;
+    } else {
+        return array("mysqli_error" => $conn->error);
+    }
+}
+
 function getRow($conn, $table_name, $row) {
 
     $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
@@ -166,47 +205,49 @@ function getProductData($conn, $table_name, $group_id, $items_per_page, $filter,
 
     // for $start_row read group_id
     $product_count = 0;
-    $table = $table_name . '_groups';
-    $groups_results = $conn->query("SELECT Group_ID, Variant_IDs FROM {$table}");
 
-    if ($groups_results !== FALSE) {
+    $sql_str = "SELECT * FROM {$table_name}";
+    if ($filter !== FALSE AND $filter !== 'All') {
+        $sql_str .= " WHERE {$filter})";
+    }
 
-        $table = $table_name . '_variants';
+    $results = $conn->query($sql_str);
 
-        foreach ($groups_results as $group_row) {
-            if ($group_row['Group_ID'] > $group_id) {
-                $sql_str = "SELECT * FROM {$table} WHERE Product_ID IN ({$group_row['Variant_IDs']}";
+    if ($results !== FALSE) {
+        foreach ($results as $row) {
+            $product_count ++;
 
-                if ($filter !== FALSE AND $filter !== 'All') {
-                    $sql_str .= "AND {$filter})";
-                } else {
-                    $sql_str .= ")";
-                }
-                $variant_results = $conn->query($sql_str);
+            $array[] = [
+                'Selling' => 0,
+                'Product_ID' => $row['Product_ID'],
+                'Name' => $row['Name'],
+                'SKU' => $row['SKU'],
+                'Price_RRP' => $row['Price_RRP'],
+                'Trade_Price' => $row['Trade_Price'],
+                'Description' => $row['Description'],
+                'Image' => $row['Image'],
+                'Colour' => $row['Colour'],
+                'Size' => $row['Size']
+            ];
 
-                if ($variant_results !== FALSE) {
-                    $product_count ++;
-                    foreach ($variant_results as $variant_row) {
-                        $grouped_variants[$variant_row['Product_ID']] = [
-                            'Selling' => $variant_row['Selling'],
-                            'Product_ID' => $variant_row['Product_ID'],
-                            'Name' => $variant_row['Name'],
-                            'SKU' => $variant_row['SKU'],
-                            'Price_RRP' => $variant_row['Price_RRP'],
-                            'Trade_Price' => $variant_row['Trade_Price'],
-                            'Description' => $variant_row['Description'],
-                            'Image' => $variant_row['Image'],
-                            'Colour' => $variant_row['Colour'],
-                            'Size' => $variant_row['Size']
-                        ];
-                    }
-                    $array[] = $grouped_variants;
-                    unset($grouped_variants);
-                    $_POST['current_row'] = $group_row['Group_ID'];
-                    if ($product_count >= $items_per_page) {
-                        break;
-                    }
-                }              
+//            $grouped_variants[$row['Product_ID']] = [
+//                'Selling' => 0,
+//                'Product_ID' => $row['Product_ID'],
+//                'Name' => $row['Name'],
+//                'SKU' => $row['SKU'],
+//                'Price_RRP' => $row['Price_RRP'],
+//                'Trade_Price' => $row['Trade_Price'],
+//                'Description' => $row['Description'],
+//                'Image' => $row['Image'],
+//                'Colour' => $row['Colour'],
+//                'Size' => $row['Size']
+//            ];
+//
+//            $array[] = $grouped_variants;
+//            unset($grouped_variants);
+            $_POST['current_row'] = $product_count - $items_per_page;
+            if ($product_count >= $items_per_page) {
+                break;
             }
         }
         return $array;
@@ -281,4 +322,92 @@ function get_largest_id($table_name) {
     $result = $conn->query("SELECT MAX(Product_ID) AS max_id FROM $table_name");
     $row = $result->fetch_assoc();
     return $row['max_id'];
+}
+
+function skuExists($sku, $table) {
+
+    $conn = openDB('rwk_productchooserdb');
+    return $conn->query("SELECT Group_ID FROM {$table} WHERE SKU = {$sku}");
+}
+
+function bulkFillTable($conn, $file) {
+
+    $table = str_replace(".csv", "", $file);
+    $fields_array = getCSVHeaders($file);
+
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
+    $type = 'VARCHAR(255)';
+
+    foreach ($fields_array as $field) {
+        $field = str_replace(' ', '_', $field);
+        $field = str_replace('(', '', $field);
+        $field = str_replace(')', '', $field);
+        $field = str_replace(',', '', $field);
+        $sql .= $field . "  " . $type . ",";
+    }
+
+    $sql = rtrim($sql, ',');
+    $sql .= ")";
+
+    if ($conn->query($sql) !== TRUE) {
+        return FALSE;
+    }
+
+    $file = "C:/xampp/htdocs/ImagesFromCSV/resources/" . $file;
+    $sql = "LOAD DATA INFILE '{$file}' INTO TABLE {$table} FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
+
+    if ($conn->query($sql)) {
+        return TRUE;
+    } else {
+        return array("mysqli_error" => $conn->error);
+    }
+}
+
+function createGroupsTable($conn, $file_name) {
+
+    $table = str_replace(".csv", "_groups", $file_name);
+
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) AUTO_INCREMENT PRIMARY KEY, Base_SKU VARCHAR(255), Variant_IDs VARCHAR(255))";
+
+    if ($conn->query($sql) === TRUE) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
+function populateGroupsTable($conn, $file_name) {
+
+    $table = str_replace(".csv", "", $file_name);
+    $groups_array = [];
+    $sql_str = "SELECT Product_ID, SKU FROM {$table}";
+
+    $results = $conn->query($sql_str);
+    if ($results !== FALSE) {
+        $table = $table . "_groups";
+        while ($row = $results->fetch_assoc()) {
+            $baseSKU = getBaseSKU($row['SKU']);
+            if (array_key_exists($baseSKU, $groups_array)) {
+                $groups_array[$baseSKU] = $groups_array[$baseSKU] . ', ' . $row['Product_ID'];
+            } else {
+                $groups_array[$baseSKU] = $row['Product_ID'];
+            }
+        }
+        foreach ($groups_array as $sku => $id) {
+            
+//            $value = $conn->real_escape_string($value);
+            $sku = "'$sku'";
+            $id = "'$id'";
+//            $assignments[] = "$key = $value";
+            
+            
+            $value = "NULL, " .  $sku . ", " . $id;
+            $insert = "INSERT INTO $table (Group_ID, Base_SKU, Variant_IDs)  VALUES (" .$value . ")";
+            if ($conn->query($insert) !== TRUE) {
+                return FALSE;
+            }
+        }
+    } else {
+        return array("mysqli_error" => $conn->error);
+    }
 }

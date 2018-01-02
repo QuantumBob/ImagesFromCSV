@@ -85,8 +85,10 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             
             $start_row = $_POST['current_row'];
 
-            $return = array('row' => $start_row, 'html' => $html);
+            $return = array('row' => 0, 'html' => "html");
+//             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
+            $json = "{'row':0, 'html':'<br>'}";
             echo $json;
             break;
 
