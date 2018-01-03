@@ -467,15 +467,17 @@ function product_data_to_html($data) {
 
         $html_array[] = '<div class="left-box">';
         $html_array[] = '<div class="table-row">';
-
+        $html_array[] = '<div id="image_box_' . $product['Product_ID'] . '" class="image_box">';
         if ($count === 0) {
             //use 'image coming soon placeholder
             $no_image = './image_coming_soon.jpg';
-            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
+//            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
+            $html_array[] = '<img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;">';
         } else {
-            $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '"></li>';
+//            $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '"></li>';
+            $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '">';
         }
-        
+        $html_array[] = '</div>'; // image_box_
         $html_array[] = '</div>'; //table-row
         $html_array[] = '</div>'; // left-box
 
@@ -484,7 +486,9 @@ function product_data_to_html($data) {
 
         $html_array[] = '<div class="info-box">';
         $html_array[] = '<div class="table-row">';
+        
         $html_array[] = '<span class="left-span">Name : <label id="name_' . $product['Product_ID'] . '">' . $product['Name'] . '</label></span>';
+        
         $html_array[] = '</div>'; // table-row
         $html_array[] = '<div class="table-row">';
         $html_array[] = '<span class="left-span">Price : £<label id="price_' . $product['Product_ID'] . '">' . $product['Price_RRP'] . '</label></span>';
@@ -511,7 +515,7 @@ function product_data_to_html($data) {
         $html_array[] = '</div>'; // table-row
 
         $html_array[] = '<div class="table-row">';
-        $html_array[] = '<p class="left-span"><label id="description_' . $first_id . '">' . $first_variant['Description'] . '</label></p>';
+        $html_array[] = '<p class="left-span"><label id="description_' . $product['Product_ID'] . '">' . $product['Description'] . '</label></p>';
         $html_array[] = '</div>'; // table-row
 
         $html_array[] = '</div>'; // right-box

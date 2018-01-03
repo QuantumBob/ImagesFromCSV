@@ -7,7 +7,7 @@ include 'main.php';
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" type="text/css" href="imagesfromcsv.css" />
-        <script src="jquery-3.2.1.min.js"></script>
+        <script src="jquery-3.2.1.js"></script>
         <script src="scripts.js"></script>
         <title></title>
     </head>

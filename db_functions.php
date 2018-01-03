@@ -245,10 +245,10 @@ function getProductData($conn, $table_name, $group_id, $items_per_page, $filter,
 //
 //            $array[] = $grouped_variants;
 //            unset($grouped_variants);
-            $current_row = $product_count - $items_per_page;
-            
+            $current_row = $product_count + $items_per_page;
+
             if ($product_count >= $items_per_page) {
-                $_POST['current_row'] = (string)$current_row;
+                $_POST['current_row'] = (string) $current_row;
                 break;
             }
         }
@@ -358,9 +358,15 @@ function bulkFillTable($conn, $file) {
     $file = "C:/xampp/htdocs/ImagesFromCSV/resources/" . $file;
     $sql = "LOAD DATA INFILE '{$file}' INTO TABLE {$table} FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
 
-    if ($conn->query($sql)) {
-        return TRUE;
-    } else {
+    $result = $conn->query($sql);
+    if ($result !== TRUE) {
+        return array("mysqli_error" => $conn->error);
+    }
+    
+    $sql = "ALTER TABLE {$table} ADD Selling BOOLEAN FIRST, ADD Parent INT(10) UNSIGNED FIRST";
+    
+    $result = $conn->query($sql);
+    if ($result !== TRUE) {
         return array("mysqli_error" => $conn->error);
     }
 }
@@ -369,7 +375,7 @@ function createGroupsTable($conn, $file_name) {
 
     $table = str_replace(".csv", "_groups", $file_name);
 
-    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) AUTO_INCREMENT PRIMARY KEY, Base_SKU VARCHAR(255), Variant_IDs VARCHAR(255))";
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY, Base_SKU VARCHAR(255), Variant_IDs VARCHAR(255))";
 
     if ($conn->query($sql) === TRUE) {
         return TRUE;
@@ -379,33 +385,50 @@ function createGroupsTable($conn, $file_name) {
 }
 
 function populateGroupsTable($conn, $file_name) {
+// and update image url and parent id
 
     $table = str_replace(".csv", "", $file_name);
     $groups_array = [];
-    $sql_str = "SELECT Product_ID, SKU FROM {$table}";
+    $group_id = 0;
+    $sql = "SELECT Product_ID, SKU, Image FROM {$table}";
 
-    $results = $conn->query($sql_str);
+    $results = $conn->query($sql);
     if ($results !== FALSE) {
-        $table = $table . "_groups";
-        while ($row = $results->fetch_assoc()) {
+
+        while ($row = $results->fetch_assoc()) {       
             $baseSKU = getBaseSKU($row['SKU']);
             if (array_key_exists($baseSKU, $groups_array)) {
-                $groups_array[$baseSKU] = $groups_array[$baseSKU] . ', ' . $row['Product_ID'];
+                $groups_array[$baseSKU]['variants'] = $groups_array[$baseSKU]['variants'] . ', ' . $row['Product_ID'];
+                $group_id = $groups_array[$baseSKU]["group_id"];
             } else {
-                $groups_array[$baseSKU] = $row['Product_ID'];
+//                $groups_array[$baseSKU] = $row['Product_ID'];         
+                $groups_array[$baseSKU] = array("group_id" => count($groups_array) + 1, "variants" => $row['Product_ID']);
+                $group_id = $groups_array[$baseSKU]["group_id"];
+            }
+            
+            $image = getImageFromWeb($row['Image']);
+            $image = "'$image'";
+//            $sql = "UPDATE {$table} SET Image = {$image}  WHERE Product_ID ={$row['Product_ID']}";
+            $sql = "UPDATE {$table} SET Image = {$image}, Parent = {$group_id}  WHERE Product_ID ={$row['Product_ID']}";
+            $sql_result = $conn->query($sql);
+
+            if ($sql_result !== TRUE) {
+                return array("mysqli_error" => $conn->error);
             }
         }
-        foreach ($groups_array as $sku => $id) {
-            
-//            $value = $conn->real_escape_string($value);
+
+        $table = $table . "_groups";
+        foreach ($groups_array as $sku => $values) {
             $sku = "'$sku'";
-            $id = "'$id'";
-//            $assignments[] = "$key = $value";
-            
-            
-            $value = "NULL, " .  $sku . ", " . $id;
-            $insert = "INSERT INTO $table (Group_ID, Base_SKU, Variant_IDs)  VALUES (" .$value . ")";
-            if ($conn->query($insert) !== TRUE) {
+            $variants = $values['variants'];
+            $variants = "'$variants'";
+            $group_id = $values['group_id'];
+            $group_id = "'$group_id'";
+
+            // NULL auto_increments the Group_ID
+            $insert = $group_id . ", " . $sku . ", " . $variants;
+            $sql = "INSERT INTO $table (Group_ID, Base_SKU, Variant_IDs)  VALUES (" . $insert . ")";
+            if ($conn->query($sql) !== TRUE) {
                 return FALSE;
             }
         }

@@ -171,33 +171,38 @@ img.image{
     width: 100%;*/
 }
 
-.carousel {
+.image_box {
     width: 250px;
     overflow: hidden;
     border: solid 1px black;
     position: relative;
 }
 
-.carousel ul {
+/*.carousel ul {
     width: 2000px;
     padding: 0;
     margin-bottom: 0;
     margin-right: 0;
     margin-top: 0;
     margin-left: 0;
-}
+}*/
 
-.carousel ul li {
+.image_box img {
     width: 250px;
     text-align: center;
     list-style: none;
     float: left;
 }
 
-.carousel ul li img {
+/*.carousel ul li img {
     display: block;
     width: 100%;
-}
+}*/
+
+/*.carousel img {
+    display: block;
+    width: 100%;
+}*/
 
 .carousel input[type="button"]{
     position: absolute;
