@@ -344,9 +344,10 @@ function getImageFromWeb($file_url) { // ***USING***
     }
 
     $image_path = $media_dir . basename($file_url);
+    $source  = explode(',', $file_url);
 
     if (!file_exists($image_path)) {
-        copy($file_url, $image_path);
+        copy($source[0], $image_path);
     }
     return $image_path;
 }
@@ -460,7 +461,6 @@ function showProducts($start_group_id, $items_per_page, $filter = FALSE) { // **
         $start_group_id = 0;
     }
 
-    session_start();
     $table_name = $_SESSION['table_name'];
 
     $conn = openDB('rwk_productchooserdb');
@@ -475,15 +475,13 @@ function product_data_to_html($data) { // ***USING***
     $html_array[] = '<div id=\'product_data\' class="base-layer">';
 
     foreach ($data as $product) {
-        $keys = array_keys($product);
-        $count = count($product);
-
+         
         $html_array[] = '<div class="product_box">';
 
         $html_array[] = '<div class="left-box">';
         $html_array[] = '<div class="table-row">';
         $html_array[] = '<div id="image_box_' . $product['Product_ID'] . '" class="image_box">';
-        if ($count === 0) {
+        if ($product['Image'] === "") {
             //use 'image coming soon placeholder
             $no_image = './image_coming_soon.jpg';
 //            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';

@@ -262,6 +262,7 @@ jQuery(document).ready(function ($) {
             cache: false,
             contentType: false,
             processData: false,
+            dataType: "json",
             // Custom XMLHttpRequest
             xhr: function () {
                 var myXhr = $.ajaxSettings.xhr();
@@ -279,9 +280,11 @@ jQuery(document).ready(function ($) {
                 return myXhr;
             },
             success: function (data) {
+                jQuery('#product_data').remove();
                 jQuery('#upload_div').hide();
-                jQuery('#header_div').show();
-                jQuery('#header_form').append(data);
+                jQuery('#product_div').append(data.html);
+                jQuery('#next_page_btn').show();
+                jQuery('#current_row').val(data.row);
             }
         });
     });

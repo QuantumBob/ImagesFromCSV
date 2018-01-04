@@ -230,21 +230,6 @@ function getProductData($conn, $table_name, $group_id, $items_per_page, $filter,
                 'Size' => $row['Size']
             ];
 
-//            $grouped_variants[$row['Product_ID']] = [
-//                'Selling' => 0,
-//                'Product_ID' => $row['Product_ID'],
-//                'Name' => $row['Name'],
-//                'SKU' => $row['SKU'],
-//                'Price_RRP' => $row['Price_RRP'],
-//                'Trade_Price' => $row['Trade_Price'],
-//                'Description' => $row['Description'],
-//                'Image' => $row['Image'],
-//                'Colour' => $row['Colour'],
-//                'Size' => $row['Size']
-//            ];
-//
-//            $array[] = $grouped_variants;
-//            unset($grouped_variants);
             $current_row = $product_count + $items_per_page;
 
             if ($product_count >= $items_per_page) {
@@ -335,7 +320,7 @@ function skuExists($sku, $table) {
 function bulkFillTable($conn, $file) { // ***USING***
 
     $table = str_replace(".csv", "", $file);
-//    session_start();
+
     $_SESSION['table_name'] = $table;
     $fields_array = getCSVHeaders($file);
 
