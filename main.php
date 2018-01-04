@@ -61,17 +61,30 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             echo getTables();
             break;
 
-        case 'useFile': // ***USING***
-            $result = useCSV();
-            echo $result;
+        case 'alteregoGo': // ***USING***
+            $file_name = uploadCSV();
+            $result = updateDB();
+            
+            $start_row = $_POST['current_row'];
+            $items_per_page = $_POST['ipp'];
+            $filter = $_POST['filter'];
+            $html = showProducts($start_row, $items_per_page, $filter);
+
+            $start_row = $_POST['current_row'];
+
+            $return = array('row' => $start_row, 'html' => $html);
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
+
+            echo $json;
             break;
 
-        case 'uploadCSV' : // *** USING ???
-            $file_name = uploadCSV();
-            $headers = getCSVHeaders($file_name);
-            $html = headersToHtml($headers);
-            echo $html;
-            break;
+//        case 'uploadCSV' : // *** USING ***
+//            $file_name = uploadCSV();
+//            $headers = getCSVHeaders($file_name);
+//            $html = headersToHtml($headers);
+//            echo $html;
+//            $result = updateDB();
+//            break;
 
         case 'updateDB' : // ***USING***
             $result = updateDB();
@@ -87,7 +100,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
-        
+
             echo $json;
             break;
 

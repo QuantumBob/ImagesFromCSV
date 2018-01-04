@@ -16,17 +16,11 @@ include 'main.php';
             <input id="home_btn" class="button_class spacer-right" type="button" name= 'home_btn' value="Home" />
             Product Importer
         </h1>
-        <!--div id="file_dialog" title="File Exists"> </div-->
+        
         <div id="upload_div" class="file_form_div">
-            <form id="upload_file" class="file_form" name="upload_file" enctype="multipart/form-data" method="POST" action="uploadCSV">
-                <input id="MAX_FILE_SIZE" type="hidden" name="MAX_FILE_SIZE" value="100000" />
-                <label for="uploadedfile">Choose a CSV file to upload</label>
-                <input id="uploadedfile" name="uploadedfile" type="file"  />
-                <label id="upload_file_name">No File Selected</label>             
-                <br />
-                <input id="upload_file_btn" class="button_class align_right" type="button" name= 'submit' value="Upload File" hidden/>
-                <input id="use_file_btn" class="button_class align_right" type="button" name="use_file_btn" value="Use Existing" hidden />
-                <label id="file_exists_lbl" class="align_right" hidden>File already exists</label>            
+            <form id="upload_file" class="file_form" name="upload_file" method="POST" action="uploadCSV">
+                <input id="MAX_FILE_SIZE" type="hidden" name="MAX_FILE_SIZE" value="100000" />                          
+                <input id="alter_ego_go_btn" class="button_class align_right" type="button" name="alter_ego_go_btn" value="AlterEgo Go" />                      
             </form>
             <br/>
             <form id="existing_files_form" name="existing_files_form" method="POST" action="useFile">
@@ -37,16 +31,6 @@ include 'main.php';
             </form>
         </div>
         <p></p>
-        <div id="header_div" hidden>
-            <form id="header_form" name="header_form" method="POST" action="updateDB">
-                <h2>Choose the columns to get images for</h2>
-                <label for="header_table_name">Enter Table Name</label>
-                <input type="text" id="header_table_name" name="table_name" value="Enter Name"/>
-                <br>
-                <input id="select_header_btn" class="button_class align_right" type="button" name= 'submit' value="Use Headers" />
-                <p></p>
-            </form>
-        </div>
         <div id="product_div">
             <h2>Product List</h2>
             <div id="file_form_div" class="file_form_div" hidden>           
@@ -69,8 +53,7 @@ include 'main.php';
                     <option name="10_ipp" value="10">10</option>
                     <option name="25_ipp" value="25">25</option>
                     <option name="50_ipp" value="50">50</option>
-                </select>
-                <?php getTables(); ?>
+                </select>               
                 <?php generateFilters(); ?>
                 <p></p>
             </form>

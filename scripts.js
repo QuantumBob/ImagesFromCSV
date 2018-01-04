@@ -237,11 +237,22 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    jQuery("#use_file_btn").click(function () {
+    jQuery("#alter_ego_go_btn").click(function () {
 
         var myForm = jQuery('#upload_file')[0];
         var formData = new FormData(myForm);
-        formData.append("action", 'useFile');
+        
+        formData.append("action", 'alteregoGo');
+        
+//        formData.append("table_name", this.name);
+        formData.append("ipp", jQuery("#items_per_page").val());
+         formData.append("filter", jQuery("#filter_type").val());
+        formData.append("current_row", jQuery('#current_row').val()); // for current_row read group_id
+
+//        jQuery('#products_table').attr('name', this.name);
+//        jQuery('#next_page_btn').attr('name', this.name);
+//        jQuery('#prev_page_btn').attr('name', this.name);
+//        jQuery('#items_per_page').attr('name', this.name);
 
         jQuery.ajax({
             url: 'main.php',

@@ -335,6 +335,8 @@ function skuExists($sku, $table) {
 function bulkFillTable($conn, $file) { // ***USING***
 
     $table = str_replace(".csv", "", $file);
+//    session_start();
+    $_SESSION['table_name'] = $table;
     $fields_array = getCSVHeaders($file);
 
     $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
