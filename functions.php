@@ -1,6 +1,6 @@
 <?php
 
-function getFileList() {
+function getFileList() { // ***USING***
 
     $target_dir = $GLOBALS['res_dir'];
     if ($handle = opendir($target_dir)) {
@@ -18,7 +18,7 @@ function getFileList() {
         echo implode(' ', $html);
     }
 }
-
+/*
 function doesFileExist($file_name, $upload) {
 
     if ($upload) {
@@ -38,8 +38,8 @@ function doesFileExist($file_name, $upload) {
         }
     }
 }
-
-function useCSV() {
+*/
+function useCSV() { // ***USING***
 
     $target_path = $GLOBALS['res_dir'];
     if (isset($_FILES['uploadedfile']) && !empty($_FILES['uploadedfile'])) {
@@ -60,7 +60,7 @@ function useCSV() {
     return $str;
 }
 
-function uploadCSV() {//$file_name) {
+function uploadCSV() {//$file_name) { // ***USING ??
 //    if (empty($file_name)) {
 //        return FALSE;
 //    }
@@ -81,7 +81,7 @@ function uploadCSV() {//$file_name) {
     }
 }
 
-function getCSVHeaders($file_name) {
+function getCSVHeaders($file_name) { // ***USING***
 
     $resources_dir = $GLOBALS['res_dir'];
     $file_url = $resources_dir . $file_name;
@@ -94,7 +94,7 @@ function getCSVHeaders($file_name) {
     return $headers;
 }
 
-function headersToHtml($headers) {
+function headersToHtml($headers) { // ***USING***
 
     $html_array[] = '<div class="checkbox_container">';
     foreach ($headers as $header) {
@@ -103,7 +103,7 @@ function headersToHtml($headers) {
     $html_array[] = '</div>';
     return implode(" ", $html_array);
 }
-
+/*
 function headersToHtml2($headers) {
 
     $html_array[] = '<div class="checkbox_container">';
@@ -112,9 +112,8 @@ function headersToHtml2($headers) {
     }
     $html_array[] = '</div>';
     return implode(" ", $html_array);
-}
-
-function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) {
+}*/
+function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) { // ***USING***
 
     $resources_dir = $GLOBALS['res_dir'];
     $file_url = $resources_dir . $file_name;
@@ -125,7 +124,7 @@ function populateTableFromCSV($conn, $file_name, $create_groups = TRUE) {
     createGroupsTable($conn, $file_name);
     populateGroupsTable($conn, $file_name);
 }
-
+/*
 function populateTableFromCSV_old($conn, $file_name, $create_groups = TRUE) {
 
     $resources_dir = $GLOBALS['res_dir'];
@@ -182,9 +181,9 @@ function populateTableFromCSV_old($conn, $file_name, $create_groups = TRUE) {
 
                     foreach ($image_array as $image_url) {
                         if (strcasecmp($compare_url, $image_url) != 0) {
-                            /** Do something to allow multiple images inside one field
-                              $image_name = getImageFromWeb($image_url);
-                              $data[$index] = $image_name; */
+                            // Do something to allow multiple images inside one field
+                             // $image_name = getImageFromWeb($image_url);
+                             // $data[$index] = $image_name; 
                         }
                     }
                 }
@@ -227,9 +226,9 @@ function process_variants($data, $image_indexes, $variant_headers, $table_name) 
 
             foreach ($image_array as $image_url) {
                 if (strcasecmp($compare_url, $image_url) != 0) {
-                    /** Do something to allow multiple images inside one field
-                      $image_name = getImageFromWeb($image_url);
-                      $data[$index] = $image_name; */
+                    // Do something to allow multiple images inside one field
+                     // $image_name = getImageFromWeb($image_url);
+                     // $data[$index] = $image_name; 
                 }
             }
         }
@@ -271,9 +270,9 @@ function process_groups($data, $image_indexes, $group_headers) {
 
             foreach ($image_array as $image_url) {
                 if (strcasecmp($compare_url, $image_url) != 0) {
-                    /** Do something to allow multiple images inside one field
-                      $image_name = getImageFromWeb($image_url);
-                      $data[$index] = $image_name; */
+                    // Do something to allow multiple images inside one field
+                     // $image_name = getImageFromWeb($image_url);
+                     // $data[$index] = $image_name;
                 }
             }
         }
@@ -298,8 +297,8 @@ function get_group_id_base($largest_id) {
 
     return $base;
 }
-
-function getImageFromWeb($file_url) {
+*/
+function getImageFromWeb($file_url) { // ***USING***
 
     $media_dir = $GLOBALS['media_dir'];
 
@@ -314,7 +313,7 @@ function getImageFromWeb($file_url) {
     }
     return $image_path;
 }
-
+/*
 function getBaseName($name) {
 
     $resource_file = $GLOBALS['res_file'];
@@ -328,7 +327,8 @@ function getBaseName($name) {
         }
     }
 }
-
+*/
+/*
 function splitSKU($sku) {
 
     $new_sku = str_ireplace('/', '', $sku);
@@ -360,8 +360,8 @@ function splitSKU($sku) {
     }
     return FALSE;
 }
-
-function getBaseSKU($sku) {
+*/
+function getBaseSKU($sku) { // ***USING***
 
     $resource_file = $GLOBALS['res_file'];
     $colours = getResourceFromXML($resource_file, 'alterego_colours');
@@ -385,7 +385,7 @@ function getBaseSKU($sku) {
     return substr($sku, 0, 8);
 }
 
-function updateDB() {
+function updateDB() { // ***USING***
 
     session_start();
     $file_name = $_SESSION["filename"];
@@ -415,7 +415,7 @@ function updateDB() {
 //
 //    createTable($conn, 'woo_map', $fields_array, $indices_array);
 }
-
+/*
 function spaces_to_underscore($array, $change_keys = FALSE) {
 
     if ($change_keys) {
@@ -437,8 +437,8 @@ function spaces_to_underscore($array, $change_keys = FALSE) {
     }
     return $new_array;
 }
-
-function showProducts($start_group_id, $items_per_page, $filter = FALSE) {
+*/
+function showProducts($start_group_id, $items_per_page, $filter = FALSE) { // ***USING***
 
     // for $start_row read group_id
     if ($start_group_id < 0) {
@@ -455,7 +455,7 @@ function showProducts($start_group_id, $items_per_page, $filter = FALSE) {
     return implode(' ', $html);
 }
 
-function product_data_to_html($data) {
+function product_data_to_html($data) { // ***USING***
 
     $html_array[] = '<div id=\'product_data\' class="base-layer">';
 
@@ -525,7 +525,7 @@ function product_data_to_html($data) {
 
     return $html_array;
 }
-
+/*
 function product_data_to_html_OLD2($data) {
 
     $html_array[] = '<div id=\'product_data\' class="base-layer">';
@@ -602,11 +602,7 @@ function product_data_to_html_OLD2($data) {
 
         $html_array[] = '</div>'; // right-box
         $html_array[] = '</div>'; // product-box
-        /*
-          $pos = stripos($array['Image'], '.jpg');
-          if ($pos !== FALSE){
-          $array[Image] = substr_replace($array[Image], '-150x150', $pos, 0);
-          } */
+       
     }
     $html_array[] = '</div>'; // base-layer
 
@@ -689,18 +685,14 @@ function product_data_to_html_OLD($data) {
 
         $html_array[] = '</div>'; // right-box
         $html_array[] = '</div>'; // product-box
-        /*
-          $pos = stripos($array['Image'], '.jpg');
-          if ($pos !== FALSE){
-          $array[Image] = substr_replace($array[Image], '-150x150', $pos, 0);
-          } */
+        
     }
     $html_array[] = '</div>'; // base-layer
 
     return $html_array;
 }
-
-function updateSelling() {
+*/
+function updateSelling() { // ***USING***
 
     $table_name = $_POST['table_name'];
     $selling_list = $_POST['selling'];
@@ -826,7 +818,7 @@ function create_variable_product($group, $variations, $table_name) {
     }
 }
 
-function generateFilters() {
+function generateFilters() { // ***USING***
 
     $html_array[] = '<select id="filter_type"  name="filter_type">';
     $html_array[] = ' <option name="all"value="All" selected>All</option>';

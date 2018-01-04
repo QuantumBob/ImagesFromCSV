@@ -61,23 +61,23 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             echo getTables();
             break;
 
-        case 'useFile':
+        case 'useFile': // ***USING***
             $result = useCSV();
             echo $result;
             break;
 
-        case 'uploadCSV' :
+        case 'uploadCSV' : // *** USING ???
             $file_name = uploadCSV();
             $headers = getCSVHeaders($file_name);
             $html = headersToHtml($headers);
             echo $html;
             break;
 
-        case 'updateDB' :
+        case 'updateDB' : // ***USING***
             $result = updateDB();
             break;
 
-        case 'showProducts' :
+        case 'showProducts' : // ***USING***
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
             $filter = $_POST['filter'];
@@ -121,7 +121,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             echo $json;
             break;
 
-        case 'updateSelling' :
+        case 'updateSelling' : // ***USING***
             updateSelling();
             break;
 

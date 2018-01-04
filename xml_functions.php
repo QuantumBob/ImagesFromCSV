@@ -1,5 +1,5 @@
 <?php
-
+/*
 function getItemFromXML($reader) {
 
     $node = new SimpleXMLElement($reader->readOuterXML());
@@ -33,8 +33,8 @@ function openXMLFile() {
     $reader->open("D:\Documents\work\Seduce\Alterego_first_few.xml");
     return $reader;
 }
-
-function getResourceFromXML($file_path, $resource, $attr = "", $add_empty = FALSE) {
+*/
+function getResourceFromXML($file_path, $resource, $attr = "", $add_empty = FALSE) { // ***USING***
 
     $reader = new XMLReader;
     $reader->open($file_path);

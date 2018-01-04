@@ -1,6 +1,6 @@
 <?php
 
-function connectToServer() {
+function connectToServer() { // ***USING***
 
     $servername = "localhost";
     $username = "root";
@@ -15,7 +15,7 @@ function connectToServer() {
     return $conn;
 }
 
-function connectToDb($db_name) {
+function connectToDb($db_name) { // ***USING***
 
     $servername = "localhost";
     $username = "root";
@@ -34,7 +34,7 @@ function closeConnection($conn) {
     $conn->close();
 }
 
-function openDB($db_name) {
+function openDB($db_name) { // ***USING***
 
     // connect to server
     $conn = connectToServer();
@@ -49,7 +49,7 @@ function openDB($db_name) {
 
     return $conn;
 }
-
+/*
 function createTable($conn, $table_name, $fields_array, $indices_array) {
 
     $result = $conn->query("SHOW TABLES LIKE " . $table_name);
@@ -86,8 +86,8 @@ function getColumnsArray($table_name) {
 
     return $headers;
 }
-
-function getTables() {
+*/
+function getTables() { // ***USING***
 
     $conn = openDB('rwk_productchooserdb');
     $result = $conn->query("SELECT table_name FROM information_schema.tables where table_schema='rwk_productchooserdb'");
@@ -100,7 +100,7 @@ function getTables() {
     }
     echo implode(' ', $html);
 }
-
+/*
 function insertRow($conn, $data, $table_name, $concat) {
 
     $exclude = array();
@@ -200,8 +200,8 @@ function getProductByID($table_name, $ID) {
     $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
     return $result->fetch_all(MYSQLI_ASSOC);
 }
-
-function getProductData($conn, $table_name, $group_id, $items_per_page, $filter, $previous_page = FALSE) {
+*/
+function getProductData($conn, $table_name, $group_id, $items_per_page, $filter, $previous_page = FALSE) { // ***USING***
 
     // for $start_row read group_id
     $product_count = 0;
@@ -257,7 +257,7 @@ function getProductData($conn, $table_name, $group_id, $items_per_page, $filter,
         return array("mysqli_error" => $conn->error);
     }
 }
-
+/*
 function getProductData_OLD($conn, $table_name, $start_row, $items_per_page, $filter) {
 
     $product_count = 0;
@@ -304,8 +304,8 @@ function getProductData_OLD($conn, $table_name, $start_row, $items_per_page, $fi
         return array("mysqli_error" => $conn->error);
     }
 }
-
-function updateSellingDB($conn, $table_name, $selling_list) {
+*/
+function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
 
     $checkbox = json_decode($selling_list, TRUE);
     $update = "UPDATE {$table_name} SET Selling = {$checkbox['checked']} WHERE Product_ID = {$checkbox['id']}";
@@ -317,7 +317,7 @@ function updateSellingDB($conn, $table_name, $selling_list) {
         return array("mysqli_error" => $conn->error);
     }
 }
-
+/*
 function get_largest_id($table_name) {
 
     $conn = openDB('rwk_productchooserdb');
@@ -331,8 +331,8 @@ function skuExists($sku, $table) {
     $conn = openDB('rwk_productchooserdb');
     return $conn->query("SELECT Group_ID FROM {$table} WHERE SKU = {$sku}");
 }
-
-function bulkFillTable($conn, $file) {
+*/
+function bulkFillTable($conn, $file) { // ***USING***
 
     $table = str_replace(".csv", "", $file);
     $fields_array = getCSVHeaders($file);
@@ -371,7 +371,7 @@ function bulkFillTable($conn, $file) {
     }
 }
 
-function createGroupsTable($conn, $file_name) {
+function createGroupsTable($conn, $file_name) { // ***USING***
 
     $table = str_replace(".csv", "_groups", $file_name);
 
@@ -384,7 +384,7 @@ function createGroupsTable($conn, $file_name) {
     }
 }
 
-function populateGroupsTable($conn, $file_name) {
+function populateGroupsTable($conn, $file_name) { // ***USING***
 // and update image url and parent id
 
     $table = str_replace(".csv", "", $file_name);
