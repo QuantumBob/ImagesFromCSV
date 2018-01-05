@@ -344,7 +344,7 @@ function getImageFromWeb($file_url) { // ***USING***
     }
 
     $image_path = $media_dir . basename($file_url);
-    $source  = explode(',', $file_url);
+    $source = explode(',', $file_url);
 
     if (!file_exists($image_path)) {
         copy($source[0], $image_path);
@@ -424,7 +424,6 @@ function getBaseSKU($sku) { // ***USING***
 }
 
 function updateDB() { // ***USING***
-    
 //    session_start();
     $file_name = $_SESSION["filename"];
 
@@ -460,7 +459,9 @@ function showProducts($start_group_id, $items_per_page, $filter = FALSE) { // **
     if ($start_group_id < 0) {
         $start_group_id = 0;
     }
-
+    if (!isset($_SESSION)) {
+        session_start();
+    }
     $table_name = $_SESSION['table_name'];
 
     $conn = openDB('rwk_productchooserdb');
@@ -475,7 +476,7 @@ function product_data_to_html($data) { // ***USING***
     $html_array[] = '<div id=\'product_data\' class="base-layer">';
 
     foreach ($data as $product) {
-         
+
         $html_array[] = '<div class="product_box">';
 
         $html_array[] = '<div class="left-box">';

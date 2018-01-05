@@ -64,13 +64,11 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'alteregoGo': // ***USING***
             $file_name = uploadCSV();
             $result = updateDB();
-            
+
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
             $filter = $_POST['filter'];
             $html = showProducts($start_row, $items_per_page, $filter);
-
-            $start_row = $_POST['current_row'];
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
@@ -96,7 +94,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             $filter = $_POST['filter'];
             $html = showProducts($start_row, $items_per_page, $filter);
 
-            $start_row = $_POST['current_row'];
+//            $start_row = $_POST['current_row'];
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
@@ -107,14 +105,17 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'nextPage' :
 //            getNextPage();
             $items_per_page = $_POST['ipp'];
-            $start_row = $_POST['current_row']; // + $items_per_page;
+            $start_row = $_POST['current_row'] + $items_per_page;
             $filter = $_POST['filter'];
 //            $selling_list = json_decode($_POST['selling'], true);
 //            updateSelling($selling_list);
 
             $html = showProducts($start_row, $items_per_page, $filter);
 
-            $start_row = $_POST['current_row'];
+//            if (!isset($_SESSION)) {
+//                session_start();
+//                $_SESSION['current_row'] = (string) $start_row;
+//            }
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
