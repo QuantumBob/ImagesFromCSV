@@ -178,49 +178,68 @@ function getTables() { // ***USING***
   return array("mysqli_error" => $conn->error);
   }
   }
-
-  function getRow($conn, $table_name, $row) {
-
-  $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
-  //    $data = $result->fetch_row();
-  $data = $result->fetch_assoc();
-
-  if ($data != null) {
-  return $data;
-  } else {
-  return FALSE;
-  }
-  }
-
-  function getProductByID($table_name, $ID) {
-
-  $conn = openDB('rwk_productchooserdb');
-  $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
-  return $result->fetch_all(MYSQLI_ASSOC);
-  }
  */
-function getProductData($conn, $table_name, $start_row, $items_per_page, $filter, $previous_page = FALSE) { // ***USING***
-    
-    $sql = "SELECT * FROM {$table_name}"; 
+function getRow($conn, $table_name, $row) {
 
-    if ($filter !== FALSE AND $filter !== 'All') {
-        $pos = strpos($filter, "=");
-        $lhs = substr($filter, 0,$pos);
-        $rhs = substr($filter, $pos + 1);
-        $rhs = trim($rhs);
-        $rhs = "'$rhs'";
-        $sql .= " WHERE {$lhs} = {$rhs}";
+    $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
+    //    $data = $result->fetch_row();
+    $data = $result->fetch_assoc();
+
+    if ($data != null) {
+        return $data;
+    } else {
+        return FALSE;
     }
-    
+}
+
+function getProductByID($table_name, $ID) {
+
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getProductsBySKU($SKU, $table_name) {
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Parent = '{$SKU['Base_SKU']}'");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getProductData($conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE) { // ***USING***
+    $sql = "SELECT * FROM {$table_name}";
+
+    if ($filters[0] !== FALSE AND $filters[0] !== 'All') {
+        $filter_groups = [];
+        foreach ($filters as $filter) {
+            $pos = strpos($filter, "=");
+            $lhs = substr($filter, 0, $pos);
+            $lhs = trim($lhs);
+            $rhs = substr($filter, $pos + 1);
+            $rhs = trim($rhs);
+            $rhs = "'$rhs'";
+
+            if (array_key_exists($lhs, $filter_groups)) {
+                $filter_groups[$lhs] = $filter_groups[$lhs] . ',' . $rhs;
+            } else {
+                $filter_groups[$lhs] = $rhs;
+            }
+        }
+        $sql .= " WHERE ";
+        foreach ($filter_groups as $key => $filter) {
+            $sql .= "{$key} IN ({$filter})";
+            $sql .= " AND ";
+        }
+        $sql = rtrim($sql, 'AND ');
+    }
     $sql .= " LIMIT {$start_row}, {$items_per_page}";
-    
+
     $results = $conn->query($sql);
 
     if ($results !== FALSE) {
         foreach ($results as $row) {
 
             $array[] = [
-                'Selling' => 0,
+                'Selling' => $row['Selling'],
                 'Product_ID' => $row['Product_ID'],
                 'Name' => $row['Name'],
                 'SKU' => $row['SKU'],
@@ -229,14 +248,12 @@ function getProductData($conn, $table_name, $start_row, $items_per_page, $filter
                 'Description' => $row['Description'],
                 'Image' => $row['Image'],
                 'Colour' => $row['Colour'],
-                'Size' => $row['Size']
+                'Size' => $row['Size'],
+                'Stock_Type' => $row['Stock_Type'],
+                'Stock_Level' => $row['Stock_Level'],
+                'Brand' => $row['Brand']
             ];
         }
-//        if (!isset($_SESSION)) {
-//            session_start();
-//            $_SESSION['current_row'] = (string) $current_row;
-//        }
-
         return $array;
     } else {
         return array("mysqli_error" => $conn->error);
@@ -303,21 +320,20 @@ function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
     }
 }
 
-/*
-  function get_largest_id($table_name) {
+function get_largest_id($table_name) {
 
-  $conn = openDB('rwk_productchooserdb');
-  $result = $conn->query("SELECT MAX(Product_ID) AS max_id FROM $table_name");
-  $row = $result->fetch_assoc();
-  return $row['max_id'];
-  }
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT MAX(Product_ID) AS max_id FROM $table_name");
+    $row = $result->fetch_assoc();
+    return $row['max_id'];
+}
 
-  function skuExists($sku, $table) {
+function skuExists($sku, $table) {
 
-  $conn = openDB('rwk_productchooserdb');
-  return $conn->query("SELECT Group_ID FROM {$table} WHERE SKU = {$sku}");
-  }
- */
+    $conn = openDB('rwk_productchooserdb');
+    return $conn->query("SELECT Group_ID FROM {$table} WHERE SKU = {$sku}");
+}
+
 function bulkFillTable($conn, $file_name) { // ***USING***
     $table = str_replace(".csv", "", $file_name);
 
@@ -380,7 +396,7 @@ function bulkFillTable($conn, $file_name) { // ***USING***
         return array("mysqli_error" => $conn->error);
     }
 
-    $sql = "ALTER TABLE {$table} ADD Selling BOOLEAN FIRST, ADD Parent INT(10) UNSIGNED FIRST";
+    $sql = "ALTER TABLE {$table} ADD Selling VARCHAR(255) FIRST, ADD Parent VARCHAR(255) FIRST";
 
     $result = $conn->query($sql);
     if ($result !== TRUE) {
@@ -391,7 +407,12 @@ function bulkFillTable($conn, $file_name) { // ***USING***
 function createGroupsTable($conn, $file_name) { // ***USING***
     $table = str_replace(".csv", "_groups", $file_name);
 
-    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY, Base_SKU VARCHAR(255), Variant_IDs VARCHAR(255))";
+    $sql = "DROP TABLE IF EXISTS {$table}";
+    if ($conn->query($sql) === FALSE) {
+        return array("mysqli_error" => $conn->error);
+    }
+
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Base_SKU VARCHAR(255), Product_ID VARCHAR(255), Image VARCHAR(255))";
 
     if ($conn->query($sql) === TRUE) {
         return TRUE;
@@ -400,54 +421,56 @@ function createGroupsTable($conn, $file_name) { // ***USING***
     }
 }
 
-function populateGroupsTable($conn, $file_name) { // ***USING***
-// and update image url and parent id
+function reformatTable($conn, $file_name) { // ***USING***
     $table = str_replace(".csv", "", $file_name);
     $groups_array = [];
-    $group_id = 0;
     $sql = "SELECT Product_ID, SKU, Image FROM {$table}";
+
 
     $results = $conn->query($sql);
     if ($results !== FALSE) {
 
         while ($row = $results->fetch_assoc()) {
+            
             $baseSKU = getBaseSKU($row['SKU']);
-            if (array_key_exists($baseSKU, $groups_array)) {
-                $groups_array[$baseSKU]['variants'] = $groups_array[$baseSKU]['variants'] . ', ' . $row['Product_ID'];
-                $group_id = $groups_array[$baseSKU]["group_id"];
-            } else {
-//                $groups_array[$baseSKU] = $row['Product_ID'];         
-                $groups_array[$baseSKU] = array("group_id" => count($groups_array) + 1, "variants" => $row['Product_ID']);
-                $group_id = $groups_array[$baseSKU]["group_id"];
-            }
+            $baseSKU = str_replace("'", '', $baseSKU);
+            $baseSKU = "'$baseSKU'";
+            
+            $Product_ID = $row['Product_ID'];
+            $Product_ID = "'$Product_ID'";
 
             $image = getImageFromWeb($row['Image']);
             $image = "'$image'";
-//            $sql = "UPDATE {$table} SET Image = {$image}  WHERE Product_ID ={$row['Product_ID']}";
-            $sql = "UPDATE {$table} SET Image = {$image}, Parent = {$group_id}  WHERE Product_ID ={$row['Product_ID']}";
-            $sql_result = $conn->query($sql);
 
-            if ($sql_result !== TRUE) {
-                return array("mysqli_error" => $conn->error);
-            }
+            $groups_array[] = "({$baseSKU},{$Product_ID},{$image})";
         }
 
-        $table = $table . "_groups";
-        foreach ($groups_array as $sku => $values) {
-            $sku = "'$sku'";
-            $variants = $values['variants'];
-            $variants = "'$variants'";
-            $group_id = $values['group_id'];
-            $group_id = "'$group_id'";
+        $group_table = $table . "_groups";
+        $values = implode(',', $groups_array);
+        $sql = "INSERT INTO {$group_table} (Base_SKU, Product_ID, Image) VALUES {$values}";
+        $sql_result = $conn->query($sql);
 
-            // NULL auto_increments the Group_ID
-            $insert = $group_id . ", " . $sku . ", " . $variants;
-            $sql = "INSERT INTO $table (Group_ID, Base_SKU, Variant_IDs)  VALUES (" . $insert . ")";
-            if ($conn->query($sql) !== TRUE) {
-                return FALSE;
-            }
+        if ($sql_result !== TRUE) {
+            return array("mysqli_error" => $conn->error);
+        }
+
+        $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Base_SKU, {$table}.Image = {$group_table}.Image, {$table}.Selling = FALSE ";
+        $sql_result = $conn->query($sql);
+
+        if ($sql_result !== TRUE) {
+            return array("mysqli_error" => $conn->error);
         }
     } else {
         return array("mysqli_error" => $conn->error);
+    }
+}
+
+function getGroups($conn, $table_name) {
+
+    $groups = $conn->query("SELECT Base_SKU FROM {$table_name}" . "_groups");
+    if ($groups === FALSE) {
+        return array("mysqli_error" => $conn->error);
+    } else {
+        return $groups;
     }
 }

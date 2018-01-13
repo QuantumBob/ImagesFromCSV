@@ -37,9 +37,13 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
-            $filter = $_POST['filter'];
-            $html = showProducts($start_row, $items_per_page, $filter);
+            $filters = $_POST['filter'];
+            $filters = explode(',', $_POST['filter']);
+            $html = showProducts($start_row, $items_per_page, $filters);
 
+            $return = array('row' => $start_row, 'html' => "<div>Test</div>");
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
+            
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
             echo $json;
@@ -49,10 +53,14 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
-            $filter = $_POST['filter'];
-            $html = showProducts($start_row, $items_per_page, $filter);
+            $filters = $_POST['filter'];
+            $filters = explode(',', $_POST['filter']);
+            $html = showProducts($start_row, $items_per_page, $filters);
 
-            $return = array('row' => $start_row, 'html' => $html);
+            $return = array('row' => $start_row, 'html' => "<div>Test</div>");
+            $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
+            
+            $return = array("row" => $start_row, "html" => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
             echo $json;
             break;
@@ -61,28 +69,23 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             echo getTables();
             break;
 
-        case 'alteregoGo': // ***USING***
+        case 'importAlterEgo': // ***USING***
             $file_name = uploadCSV();
-            $result = updateDB();
+            $conn = openDB('rwk_productchooserdb');
+            bulkFillTable($conn, $file_name);
+            createGroupsTable($conn, $file_name);        
+            reformatTable($conn, $file_name);
 
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
-            $filter = $_POST['filter'];
-            $html = showProducts($start_row, $items_per_page, $filter);
+            $filters = explode(',', $_POST['filter']);
+            $html = showProducts($start_row, $items_per_page, $filters);
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
             echo $json;
             break;
-
-//        case 'uploadCSV' : // *** USING ***
-//            $file_name = uploadCSV();
-//            $headers = getCSVHeaders($file_name);
-//            $html = headersToHtml($headers);
-//            echo $html;
-//            $result = updateDB();
-//            break;
 
         case 'updateDB' : // ***USING***
             $result = updateDB();
@@ -91,11 +94,14 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
         case 'showProducts' : // ***USING***
             $start_row = $_POST['current_row'];
             $items_per_page = $_POST['ipp'];
-            $filter = $_POST['filter'];
-            $html = showProducts($start_row, $items_per_page, $filter);
+            $filters = explode(',', $_POST['filter']);
+            if (!isset($_SESSION)) {
+                session_start();
+            }
+            $_SESSION['table_name'] = $_POST['table_name'];
+            $html = showProducts($start_row, $items_per_page, $filters);
 
 //            $start_row = $_POST['current_row'];
-
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
@@ -106,11 +112,11 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 //            getNextPage();
             $items_per_page = $_POST['ipp'];
             $start_row = $_POST['current_row'] + $items_per_page;
-            $filter = $_POST['filter'];
+            $filters = explode(',', $_POST['filter']);
 //            $selling_list = json_decode($_POST['selling'], true);
 //            updateSelling($selling_list);
 
-            $html = showProducts($start_row, $items_per_page, $filter);
+            $html = showProducts($start_row, $items_per_page, $filters);
 
 //            if (!isset($_SESSION)) {
 //                session_start();
@@ -126,9 +132,9 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 //            getPreviousPage();
             $items_per_page = $_POST['ipp'];
             $start_row = $_POST['current_row'] - $items_per_page;
-            $filter = $_POST['filter'];
+            $filters = explode(',', $_POST['filter']);
 
-            $html = showProducts($start_row, $items_per_page, $filter, TRUE);
+            $html = showProducts($start_row, $items_per_page, $filters, TRUE);
 
             $return = array('row' => $start_row, 'html' => $html);
             $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
@@ -140,7 +146,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
             break;
 
         case 'exportCSV' :
-            exportToCSV();
+            exportToCSV('alterego');
             break;
     }
 }

@@ -15,9 +15,9 @@ jQuery(document).ready(function ($) {
 
         formData.append("action", 'exportCSV');
         formData.append("table_name", jQuery('#products_table').attr('name'));
-        
-        jQuery('#export_table_name').val( jQuery('#products_table').attr('name'));
-        
+
+        jQuery('#export_table_name').val(jQuery('#products_table').attr('name'));
+
         jQuery.ajax({
             url: 'main.php',
             type: 'post',
@@ -52,11 +52,13 @@ jQuery(document).ready(function ($) {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
+        var filters = [];
+        filters.push(getFilters('all'));
 
         formData.append("action", 'showProducts');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-         formData.append("filter", jQuery("#filter_type").val());
+        formData.append("filter", filters);//jQuery(".filter_type").val());
         formData.append("current_row", jQuery('#current_row').val()); // for current_row read group_id
 
         jQuery('#products_table').attr('name', this.name);
@@ -237,16 +239,19 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    jQuery("#alter_ego_go_btn").click(function () {
+    jQuery("#import_alter_ego_btn").click(function () {
 
         var myForm = jQuery('#upload_file')[0];
         var formData = new FormData(myForm);
-        
-        formData.append("action", 'alteregoGo');
-        
+
+        var filters = [];
+        filters.push(getFilters('all'));
+
+        formData.append("action", 'importAlterEgo');
+
 //        formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-         formData.append("filter", jQuery("#filter_type").val());
+        formData.append("filter", filters);// jQuery(".filter_type").val());
         formData.append("current_row", jQuery('#current_row').val()); // for current_row read group_id
 
 //        jQuery('#products_table').attr('name', this.name);
@@ -365,54 +370,17 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    /**
-     jQuery("#show_products_btn").click(function () {
-     
-     var myForm = jQuery('#products_form')[0];
-     var formData = new FormData(myForm);
-     formData.append("action", jQuery('#products_form').attr("action"));
-     formData.append("row", jQuery('#current_row').val());
-     
-     jQuery.ajax({
-     url: 'main.php',
-     type: 'post',
-     data: formData,
-     // Tell jQuery not to process data or worry about content-type. You *must* include these options!
-     cache: false,
-     contentType: false,
-     processData: false,
-     // Custom XMLHttpRequest
-     xhr: function () {
-     var myXhr = $.ajaxSettings.xhr();
-     if (myXhr.upload) {
-     // For handling the progress of the upload
-     myXhr.upload.addEventListener('progress', function (e) {
-     if (e.lengthComputable) {
-     $('progress').attr({
-     value: e.loaded,
-     max: e.total,
-     });
-     }
-     }, false);
-     }
-     return myXhr;
-     },
-     success: function (data) {
-     jQuery('#product_div').append(data);
-     jQuery('#show_products_btn').hide();
-     }
-     });
-     });*/
-
     jQuery("#next_page_btn").click(function () {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
+        var filters = [];
+        filters.push(getFilters('current'));
 
         formData.append("action", 'nextPage');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-        formData.append("filter", jQuery("#filter_type").val());
+        formData.append("filter", filters);//jQuery("#filter_type").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -453,11 +421,13 @@ jQuery(document).ready(function ($) {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
+        var filters = [];
+        filters.push(getFilters('current'));
 
         formData.append("action", 'previousPage');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-        formData.append("filter", jQuery("#filter_type").val());
+        formData.append("filter", filters);// jQuery("#filter_type").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -524,11 +494,13 @@ jQuery(document).ready(function ($) {
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
+        var filters = [];
+        filters.push(getFilters('current'));
 
         formData.append("action", 'changeIPP');
         formData.append("table_name", this.name);
         formData.append("ipp", jQuery("#items_per_page").val());
-        formData.append("filter", jQuery("#filter_type").val());
+        formData.append("filter", filters);//jQuery("#filter_type").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -563,16 +535,26 @@ jQuery(document).ready(function ($) {
             }
         });
     });
-    
-     jQuery("#filter_type").change(function () {
+
+    jQuery(".filter_type").change(function () {
+
+        var filters = getFilters(this.id);
+//        if (this.id === "all") {
+//            jQuery('.filter_type').not('#all').prop("checked", false);
+//        } else {
+//            jQuery('#all').prop("checked", false);
+//        }
+//        jQuery('#filters :checked').each(function () {
+//            filters.push($(this).val());
+//        });
 
         var myForm = jQuery('#products_form')[0];
         var formData = new FormData(myForm);
 
         formData.append("action", 'changeFilter');
-        formData.append("table_name", this.name);
-        formData.append("filter", jQuery("#filter_type").val());
-         formData.append("ipp", jQuery("#items_per_page").val());
+//        formData.append("table_name", this.name);
+        formData.append("filter", filters);//jQuery("#filter_type").val());
+        formData.append("ipp", jQuery("#items_per_page").val());
         formData.append("current_row", jQuery('#current_row').val());
 
         jQuery.ajax({
@@ -656,5 +638,28 @@ jQuery(document).ready(function ($) {
             }
         });
     });
+
+    function getFilters(id = false) {
+
+        var filters = [];
+        if ( jQuery('#filters :checked').length === 0){
+            id = 'all';
+        }
+        if (id === 'all') {
+            jQuery('.filter_type').not('#all').prop("checked", false);
+            jQuery('#all').prop("checked", true);
+            filters[0] = "All";
+        } else if (id === "current") {
+            jQuery('#filters :checked').each(function () {
+                filters.push($(this).val());
+            });
+        } else {
+            jQuery('#all').prop("checked", false);
+            jQuery('#filters :checked').each(function () {
+                filters.push($(this).val());
+            });
+        }
+        return filters;
+    }
 
 });
