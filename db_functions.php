@@ -200,8 +200,9 @@ function getProductByID($table_name, $ID) {
 }
 
 function getProductsBySKU($SKU, $table_name) {
+
     $conn = openDB('rwk_productchooserdb');
-    $result = $conn->query("SELECT * FROM {$table_name} WHERE Parent = '{$SKU['Base_SKU']}'");
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Selling = TRUE AND Parent = '{$SKU}'");
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -431,11 +432,11 @@ function reformatTable($conn, $file_name) { // ***USING***
     if ($results !== FALSE) {
 
         while ($row = $results->fetch_assoc()) {
-            
+
             $baseSKU = getBaseSKU($row['SKU']);
             $baseSKU = str_replace("'", '', $baseSKU);
             $baseSKU = "'$baseSKU'";
-            
+
             $Product_ID = $row['Product_ID'];
             $Product_ID = "'$Product_ID'";
 
@@ -467,10 +468,18 @@ function reformatTable($conn, $file_name) { // ***USING***
 
 function getGroups($conn, $table_name) {
 
-    $groups = $conn->query("SELECT Base_SKU FROM {$table_name}" . "_groups");
-    if ($groups === FALSE) {
+    $results = $conn->query("SELECT Base_SKU, Product_ID FROM {$table_name}" . "_groups");
+    if ($results === FALSE) {
         return array("mysqli_error" => $conn->error);
     } else {
-        return $groups;
+        $group_array = [];
+        while ($row = $results->fetch_assoc()) {
+            if (array_key_exists($row['Base_SKU'], $group_array)) {
+                $group_array[$row['Base_SKU']] = $group_array[$row['Base_SKU']] . ',' . $row['Product_ID'];
+            } else {
+                $group_array[$row['Base_SKU']] = $row['Product_ID'];
+            }
+        }
+        return $group_array;
     }
 }

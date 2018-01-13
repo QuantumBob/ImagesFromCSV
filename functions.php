@@ -84,9 +84,9 @@ function uploadCSV() {// ***USING ***
 //    $file_name = basename($_FILES['uploadedfile']['name']);
     $file_name = 'alterego_current.csv';
     $source_file = "D:/Documents/work/Seduce/" . $file_name;
-    
+
     $file_name = str_replace('-', '_', $file_name);
-    
+
     $target_path = $_SERVER['DOCUMENT_ROOT'] . '/ImagesFromCSV/resources/' . $file_name;
 
     if (copy($source_file, $target_path) !== TRUE) {
@@ -96,7 +96,7 @@ function uploadCSV() {// ***USING ***
 //    if (move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $target_path)) {
 ////        $headers = getCSVHeaders($file_name);
 ////        $str = headersToHtml($headers);
-    
+
     session_start();
     $_SESSION["filename"] = $file_name;
 ////        return $str;
@@ -284,7 +284,7 @@ function product_data_to_html($data) { // ***USING***
         $html_array[] = '</div>'; // left-box
 
         $html_array[] = '<div class="right-box">';
-        
+
         $html_array[] = '<div class="table-row">';
         $html_array[] = '<div class="info-box">';
 
@@ -292,7 +292,7 @@ function product_data_to_html($data) { // ***USING***
         $html_array[] = '<span class="left-span">Name : <label id="name_' . $product['Product_ID'] . '">' . $product['Name'] . '</label></span>';
         $html_array[] = '<span class="left-span">Brand : <label id="brand_' . $product['Product_ID'] . '">' . $product['Brand'] . '</label></span>';
         $html_array[] = '</div>'; // table-row
-        
+
         $html_array[] = '<div class="table-row">';
         $html_array[] = '<span class="left-span">Price : £<label id="price_' . $product['Product_ID'] . '">' . $product['Price_RRP'] . '</label></span>';
         $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $product['Product_ID'] . '">' . $product['Trade_Price'] . '</label></span>';
@@ -303,7 +303,7 @@ function product_data_to_html($data) { // ***USING***
             $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $product['Product_ID'] . '"></span>';
         }
         $html_array[] = '</div>'; // table-row
-        
+
         $html_array[] = '<div class="table-row">';
         $html_array[] = '<span class="left-span">Product ID : <label id="product_id_' . $product['Product_ID'] . '">' . $product['Product_ID'] . '</label></span>';
         $html_array[] = '<span class="left-span">SKU : <label id="sku_' . $product['Product_ID'] . '">' . $product['SKU'] . '</label></span>';
@@ -369,11 +369,13 @@ function exportToCSV($wholesaler) {
         $result = fputcsv($handle, $woo_headers);
 
         $groups = getGroups($conn, $table_name);
-        foreach ($groups as $group) {
+        foreach ($groups as $group => $value) {
             $result = getProductsBySKU($group, $table_name);
-            $groupArray = createGroup($result, $wholesaler, $group);
-            foreach ($groupArray as $product) {
-                fputcsv($handle, $product);
+            if (!empty($result)) {
+                $groupArray = createGroup($result, $wholesaler, $group);
+                foreach ($groupArray as $product) {
+                    fputcsv($handle, $product);
+                }
             }
         }
     }
@@ -427,7 +429,7 @@ function createGroup($result, $wholesaler, $group) {
     $new_array[0]['Allow customer reviews?'] = '0';
     $new_array[0]['Position'] = '0';
     $new_array[0]['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($result[0]['Image'], '.');
-    $new_array[0]['SKU'] = $group['Base_SKU'];
+    $new_array[0]['SKU'] = $group;
 
     for ($i = 1; $i <= $num_products; $i++) {
         $new_array[$i]['Type'] = 'variation';
@@ -440,7 +442,7 @@ function createGroup($result, $wholesaler, $group) {
         $new_array[$i]['Position'] = '0';
         $new_array[$i]['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($result[$i - 1]['Image'], '.');
         $new_array[$i]['SKU'] = str_replace('/', '', $new_array[$i]['SKU']);
-        $new_array[$i]['Parent'] = $group['Base_SKU'];
+        $new_array[$i]['Parent'] = $group;
     }
 
     return $new_array;
