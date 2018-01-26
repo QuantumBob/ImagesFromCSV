@@ -15,6 +15,19 @@ include 'main.php';
         <h1>
             <input id="home_btn" class="button_class spacer-right" type="button" name= 'home_btn' value="Home" />
             Product Importer
+            <div class="popover__wrapper align_right no_border">
+                <img class="icon" src="./resources/info-xxl.png">                       
+                <div class="popover__content">
+                    <p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p>
+                    <p class="popover__message">Discontinued Lines are only available to order while stocks last.</p>
+                    <p class="popover__message">Pre-Order Continuity  lines are not held in stock but are available to order all year round <br> 
+                        (The lead time from order to delivery is usually around  14-21 days.)</p>
+                    <p class="popover__message">Green – this item is in stock</p>
+                    <p class="popover__message">Amber – this item is in stock, but stock levels are low</p>
+                    <p class="popover__message">Red – this item is out of stock or sold out</p>
+                    <p class="popover__message">Blue – this item is pre-order continuity (available all year) or pre-order fashion</p>
+                </div>
+            </div>             
         </h1>
 
         <div id="upload_div" class="file_form_div">
@@ -44,8 +57,9 @@ include 'main.php';
                 <!--for current_row read group_id-->
                 <input id="current_row" type="hidden" name="current_row" value="0" />
                 <input id="products_table" type="hidden" name="table_name" value="0" />
-                <div id="filters">
+                <div id="filters" class="popover_div">
                     <?php generateFilters(); ?>
+
                 </div>
                 <input id="next_page_btn" class="button_class align_right"type="button" name= 'next_page_btn' value="Next Page" hidden />
                 <input id="prev_page_btn" class="button_class align_right" type="button" name= 'prev_page_btn' value="Previous Page" hidden />

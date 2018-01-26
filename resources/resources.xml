@@ -125,30 +125,56 @@
         <index index="PRIMARY KEY">Product_ID</index>
     </alterego_indices>
     <alterego_colours>
+        <colour>BIANCO</colour>
+        <colour>NERO</colour>
+        <colour>FUMO</colour>
+        <colour>AVORIO</colour>
+        <colour>SKIN</colour>
+        <colour>NUDE</colour>
+        <colour>BEIGE</colour>
         <colour>WHITE</colour>
         <colour>BLACK</colour>
         <colour>GREY</colour>
         <colour>RED</colour>
         <colour>BLUE</colour>
-        <colour>PURPLE</colour>
+        <colour>PURPLE</colour>      
+        <colour>BK</colour>
+        <colour>WHI</colour>
+        <colour>SCARLET</colour>
+        <colour>PIN</colour>
+        <colour>WT</colour>
+        <colour>PINK</colour>
+        <colour>BL</colour>
+        <colour>GOLD</colour>
+        <colour>WHT</colour>
+        <colour>BLK</colour>
+        <colour>METAL</colour>
+        <colour>PUR</colour>
+        <colour>CRM</colour>
+        <colour>TURQ</colour>
+        <colour>BLUE</colour>
+        <colour>METAL</colour>
     </alterego_colours>
     <alterego_sizes>
         <size>12X</size>
-        <size>12-XSX</size>
-        <size>ONESIZE</size>
-        <size>ONESIZE PLUS</size>
+        <size>12-XSX</size>      
         <size>ONESIZE (PLUS)</size>
+        <size>ONESIZE PLUS</size>
+        <size>ONESIZE</size>
+        <size>MEDIUM</size>
         <size>XSMALL</size>
         <size>SMALL</size>
-        <size>MEDIUM</size>
-        <size>LARGE</size>
-        <size>XLARGE</size>
         <size>XXLARGE</size>
+        <size>XLARGE</size>
+        <size>LARGE</size>             
         <size>S/M</size>
+        <size>S</size>
         <size>M/L</size>
+        <size>M</size>
         <size>L/XL</size>
-        <size>XL</size>
+        <size>L</size>
         <size>XXL</size> 
+        <size>XL</size>
         <size>S-L</size>
     </alterego_sizes>
     <woo_headers>
@@ -203,7 +229,7 @@
         <header type="VARCHAR(255)">Attribute 2 global</header>
         <header type="VARCHAR(255)">Attribute 2 default</header>
     </woo_headers>
-   <alterego_map>
+    <alterego_map>
         <header map="">Type</header>
         <header map="SKU">SKU</header>
         <header map="Name">Name</header>
@@ -253,7 +279,7 @@
         <header map="">Attribute 2 visible</header>
         <header map="">Attribute 2 global</header>
         <header map="">Attribute 2 default</header>
-         <header map="Material">Meta: _material</header> 
+        <header map="Material">Meta: _material</header> 
         <header map="Trade_Price">Meta: _trade_price</header> 
         <header map="Description_HTML">Meta: _htmldesc</header> 
     </alterego_map>

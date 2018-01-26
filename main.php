@@ -147,6 +147,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
         case 'exportCSV' :
             exportToCSV('alterego');
+//            exportToWP();
             break;
     }
 }

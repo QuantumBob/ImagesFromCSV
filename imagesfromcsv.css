@@ -75,7 +75,8 @@ div.base-layer {
     width: 98%;
     overflow: hidden;
     /*display: table;*/
-    border-collapse:collapse
+    border-collapse:collapse;
+    position: relative;
 }
 
 div.product_box{
@@ -121,8 +122,9 @@ div.info-box{
         margin-left: 5px;
         padding: 5px;
         text-align: left;
-    */ width: 60%; /*! overflow: hidden; */
+    */ width: 80%; /*! overflow: hidden; */
     float: left;
+
 }
 
 span.left-span{
@@ -139,6 +141,13 @@ div.right-span{
 
 }
 
+img.icon{
+    width: 25px;
+    margin-left: 10px;
+    margin-top: -20px;
+    border: 0;
+}
+
 img.image{
     /* do not change 
     display:block;
@@ -152,31 +161,12 @@ img.image{
     position: relative;
 }
 
-/*.carousel ul {
-    width: 2000px;
-    padding: 0;
-    margin-bottom: 0;
-    margin-right: 0;
-    margin-top: 0;
-    margin-left: 0;
-}*/
-
 .image_box img {
     width: 250px;
     text-align: center;
     list-style: none;
     float: left;
 }
-
-/*.carousel ul li img {
-    display: block;
-    width: 100%;
-}*/
-
-/*.carousel img {
-    display: block;
-    width: 100%;
-}*/
 
 .carousel input[type="button"]{
     position: absolute;
@@ -205,4 +195,61 @@ img.image{
 
 .right-button {
     right: 0;
+}
+
+.popover__wrapper {
+    /*border:  solid grey 1px;*/
+    /*position: relative;*/
+    display: inline-block;
+    
+}
+
+.popover__content {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    left: 200px;
+    top: 150px;
+    transform: translate(0,10px);
+    background-color: #BFBFBF;
+    padding: 1.5rem;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+    width: 400px;
+}
+
+.popover__content:before {
+    
+    z-index: -1;
+    content: '';
+    right: calc(50% - 10px);
+    top: -8px;
+    border-style: solid;
+    border-width: 0 10px 10px 10px;
+    border-color: transparent transparent #BFBFBF transparent;
+    transition-duration: 0.3s;
+    transition-property: transform;
+}
+
+.popover__wrapper:hover .popover__content {
+    position: static;
+    z-index: 10;
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0,-20px);
+    transition: all 0.5s cubic-bezier(0.75, -0.02, 0.2, 0.97);
+}
+
+.popover__message {
+    font-size: medium;
+    text-align: left;
+    overflow: visible;
+}
+
+.no_border{
+    border: 1px solid white;
+}
+h1 .popover__content{
+    top: 50px;
+    left: -410px;
+    width: 400px;
 }

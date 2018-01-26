@@ -47,44 +47,6 @@ function openDB($db_name) { // ***USING***
     return $conn;
 }
 
-/*
-  function createTable($conn, $table_name, $fields_array, $indices_array) {
-
-  $result = $conn->query("SHOW TABLES LIKE " . $table_name);
-
-  if ($result === FALSE) {
-  $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (";
-
-  foreach ($fields_array as $field => $type) {
-  if ($type === "") {
-  $type = 'VARCHAR(255)';
-  }
-  $sql .= $field . "  " . $type . ",";
-  }
-  foreach ($indices_array as $index => $field) {
-  $sql .= "{$field} ({$index}),";
-  }
-  $sql = rtrim($sql, ',');
-  $sql .= ")";
-
-  if ($conn->query($sql) === TRUE) {
-  return TRUE;
-  } else {
-  return FALSE;
-  }
-  }
-  }
-
-  function getColumnsArray($table_name) {
-
-  // returns array with column name as header and type as value
-  $file_path = $GLOBALS['res_file'];
-  $resource = $table_name . '_headers';
-  $headers = getResourceFromXML($file_path, $resource, 'type');
-
-  return $headers;
-  }
- */
 function getTables() { // ***USING***
     $conn = openDB('rwk_productchooserdb');
     $result = $conn->query("SELECT table_name FROM information_schema.tables where table_schema='rwk_productchooserdb'");
@@ -98,87 +60,6 @@ function getTables() { // ***USING***
     echo implode(' ', $html);
 }
 
-/*
-  function insertRow($conn, $data, $table_name, $concat) {
-
-  $exclude = array();
-
-  foreach ($data as $key => $value) {
-  if (!in_array($key, $exclude)) {
-
-  $value = $conn->real_escape_string($value);
-  $value = "'$value'";
-  $assignments[] = "$key = $value";
-  }
-  }
-
-  $insert_assignments = implode(",", $assignments);
-
-  $insert = "INSERT INTO $table_name SET $insert_assignments ";
-  $duplicate = "ON DUPLICATE KEY ";
-  $update = "UPDATE $insert_assignments";
-  if ($concat) {
-  $if_id = "IF (INSTR(Variant_IDs, '{$data['Variant_IDs']}') > 0, Variant_IDs, CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}'))";
-  $if_colour = "IF (INSTR(Colour, '{$data['Colour']}') > 0, Colour, CONCAT_WS(',', Colour, '{$data['Colour']}'))";
-  $if_size = "IF (INSTR(Size, '{$data['Size']}') > 0, Size, CONCAT_WS(',', Size, '{$data['Size']}'))";
-  $update = "UPDATE SKU = SKU, Name = Name, Variant_IDs = $if_id, Colour = $if_colour, Size = $if_size";
-  //        $if = "IF (INSTR(Variant_IDs, '{$data['Variant_IDs']}') > 0, Variant_IDs, CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}', Colour, '{$data['Colour']}', Size, '{$data['Size']}'))";
-  //        $update = "UPDATE SKU = SKU, Name = Name, Variant_IDs = $if";
-  //        $update = "UPDATE Base_SKU = Base_SKU, Variant_IDs = CONCAT_WS(',', Variant_IDs, '{$data['Variant_IDs']}')";
-  }
-
-  $sql = $insert . $duplicate . $update;
-  if ($conn->query($sql)) {
-  return TRUE;
-  } else {
-  return array("mysqli_error" => $conn->error);
-  }
-  }
-
-  function mysql_insert_array($table, $data, $exclude = array()) {
-
-  $fields = $values = array();
-  if (!is_array($exclude))
-  $exclude = array($exclude);
-  foreach (array_keys($data) as $key) {
-  if (!in_array($key, $exclude)) {
-  $fields[] = "`$key`";
-  $values[] = "'" . mysql_real_escape_string($data[$key]) . "'";
-  }
-  }
-  $fields = implode(",", $fields);
-  $values = implode(",", $values);
-  if (mysql_query("INSERT INTO `$table` ($fields) VALUES ($values)")) {
-  return array("mysql_error" => false,
-  "mysql_insert_id" => mysql_insert_id(),
-  "mysql_affected_rows" => mysql_affected_rows(),
-  "mysql_info" => mysql_info()
-  );
-  } else {
-  return array("mysql_error" => mysql_error());
-  }
-  }
-
-  function insertData($conn, $data, $table) {
-
-  if (is_array($data)) {
-  foreach ($data as $key => $value) {
-  $value = $conn->real_escape_string($value);
-  $value = "'$value'";
-  $assignments[] = "$key = $value";
-  }
-
-  $insert = implode(',', $assignments);
-  $sql = "INSERT INTO $table SET" . $insert;
-  }
-
-  if ($conn->query($sql)) {
-  return TRUE;
-  } else {
-  return array("mysqli_error" => $conn->error);
-  }
-  }
- */
 function getRow($conn, $table_name, $row) {
 
     $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
@@ -203,6 +84,13 @@ function getProductsBySKU($SKU, $table_name) {
 
     $conn = openDB('rwk_productchooserdb');
     $result = $conn->query("SELECT * FROM {$table_name} WHERE Selling = TRUE AND Parent = '{$SKU}'");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getProductsByProductCode($ProductCode, $table_name) {
+
+    $conn = openDB('rwk_productchooserdb');
+    $result = $conn->query("SELECT * FROM {$table_name} WHERE Selling = TRUE AND Parent = '{$ProductCode}'");
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -261,54 +149,6 @@ function getProductData($conn, $table_name, $start_row, $items_per_page, $filter
     }
 }
 
-/*
-  function getProductData_OLD($conn, $table_name, $start_row, $items_per_page, $filter) {
-
-  $product_count = 0;
-  $table = $table_name . '_groups';
-  $groups_results = $conn->query("SELECT * FROM {$table} LIMIT {$start_row}, {$items_per_page}");
-
-  if ($groups_results !== FALSE) {
-
-  $table = $table_name . '_variants';
-
-  foreach ($groups_results as $group_row) {
-  $variants[] = $group_row['Variant_IDs'];
-  $sql_str = "SELECT * FROM {$table} WHERE Product_ID IN ({$group_row['Variant_IDs']}";
-
-  if ($filter !== FALSE AND $filter !== 'All') {
-  $sql_str .= "AND {$filter})";
-  } else {
-  $sql_str .= ")";
-  }
-  $variant_results = $conn->query($sql_str);
-
-  if ($variant_results !== FALSE) {
-  $product_count ++;
-  foreach ($variant_results as $variant_row) {
-  $grouped_variants[$variant_row['Product_ID']] = [
-  'Selling' => $variant_row['Selling'],
-  'Product_ID' => $variant_row['Product_ID'],
-  'Name' => $variant_row['Name'],
-  'SKU' => $variant_row['SKU'],
-  'Price_RRP' => $variant_row['Price_RRP'],
-  'Trade_Price' => $variant_row['Trade_Price'],
-  'Description' => $variant_row['Description'],
-  'Image' => $variant_row['Image'],
-  'Colour' => $variant_row['Colour'],
-  'Size' => $variant_row['Size']
-  ];
-  }
-  $array[] = $grouped_variants;
-  unset($grouped_variants);
-  }
-  }
-  return $array;
-  } else {
-  return array("mysqli_error" => $conn->error);
-  }
-  }
- */
 function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
     $checkbox = json_decode($selling_list, TRUE);
     $update = "UPDATE {$table_name} SET Selling = {$checkbox['checked']} WHERE Product_ID = {$checkbox['id']}";
@@ -365,8 +205,7 @@ function bulkFillTable($conn, $file_name) { // ***USING***
         return array("mysqli_error" => $conn->error);
     }
 
-
-    $file_name = "C:/xampp/htdocs/ImagesFromCSV/resources/" . $file_name;
+    $file_name = "C:/wamp64/www/ImagesFromCSV/resources/" . $file_name;
     // get number of rows in file
     $file = new SplFileObject($file_name, 'r');
     $file->seek(PHP_INT_MAX);
@@ -390,14 +229,15 @@ function bulkFillTable($conn, $file_name) { // ***USING***
         }
     }
 
-    $sql = "LOAD DATA INFILE '{$file_name}' INTO TABLE {$table} FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
+//    $sql = "LOAD DATA INFILE '{$file_name}' INTO TABLE {$table} CHARACTER SET UTF8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
+    $sql = "LOAD DATA LOCAL INFILE '{$file_name}' INTO TABLE {$table} FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
 
     $result = $conn->query($sql);
     if ($result !== TRUE) {
         return array("mysqli_error" => $conn->error);
     }
-
-    $sql = "ALTER TABLE {$table} ADD Selling VARCHAR(255) FIRST, ADD Parent VARCHAR(255) FIRST";
+    // "ALTER TABLE `alterego_current_stockline_green` ADD PRIMARY KEY(`Product_ID`);"
+    $sql = "ALTER TABLE {$table} ADD Selling VARCHAR(255) FIRST, ADD Parent VARCHAR(255) FIRST, ADD PRIMARY KEY(`Product_ID`)";
 
     $result = $conn->query($sql);
     if ($result !== TRUE) {
@@ -413,7 +253,7 @@ function createGroupsTable($conn, $file_name) { // ***USING***
         return array("mysqli_error" => $conn->error);
     }
 
-    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Base_SKU VARCHAR(255), Product_ID VARCHAR(255), Image VARCHAR(255))";
+    $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Parent VARCHAR(255), Product_ID VARCHAR(255), Image VARCHAR(255))";
 
     if ($conn->query($sql) === TRUE) {
         return TRUE;
@@ -422,10 +262,12 @@ function createGroupsTable($conn, $file_name) { // ***USING***
     }
 }
 
-function reformatTable($conn, $file_name) { // ***USING***
+function reformatTable($conn, $file_name) {
+
     $table = str_replace(".csv", "", $file_name);
     $groups_array = [];
-    $sql = "SELECT Product_ID, SKU, Image FROM {$table}";
+    $brand_array = [];
+    $sql = "SELECT Product_ID, SKU, Name, Product_Range, Brand, Image FROM {$table}";
 
 
     $results = $conn->query($sql);
@@ -433,29 +275,46 @@ function reformatTable($conn, $file_name) { // ***USING***
 
         while ($row = $results->fetch_assoc()) {
 
-            $baseSKU = getBaseSKU($row['SKU']);
-            $baseSKU = str_replace("'", '', $baseSKU);
-            $baseSKU = "'$baseSKU'";
+//            $baseSKU = getBaseSKU($row['SKU']);
+//            $baseSKU = str_replace("'", '', $baseSKU);
+//            $baseSKU = "'$baseSKU'";
+
+            if ($row['Product_Range'] === "") {
+                $ParentSKU = $row['Name'];
+            } else {
+                $ParentSKU = $row['Product_Range'];
+            }
+            $ParentSKU = generateParentSKU($ParentSKU);
+            // get $ParentSKU from Product_Range or if blank from Name.
+            // remove ()/ and replace with _
+            // convert to all upper case
+            // remove colour from end of string
+
+            $ParentSKU = "'$ParentSKU'";
 
             $Product_ID = $row['Product_ID'];
             $Product_ID = "'$Product_ID'";
 
-            $image = getImageFromWeb($row['Image']);
+            if ( ! empty( $row['Brand'] ) && !in_array($row['Brand'], $brand_array)) {
+                $brand_array[] = $row['Brand'];
+            }
+            
+            $image = getImage($row['Image'], $brand, $row['SKU']);
             $image = "'$image'";
-
-            $groups_array[] = "({$baseSKU},{$Product_ID},{$image})";
+            
+            $groups_array[] = "({$ParentSKU},{$Product_ID},{$image})";      
         }
 
         $group_table = $table . "_groups";
         $values = implode(',', $groups_array);
-        $sql = "INSERT INTO {$group_table} (Base_SKU, Product_ID, Image) VALUES {$values}";
+        $sql = "INSERT INTO {$group_table} (Parent, Product_ID, Image) VALUES {$values}"; // change Product_Range to Parent_SKU
         $sql_result = $conn->query($sql);
 
         if ($sql_result !== TRUE) {
             return array("mysqli_error" => $conn->error);
         }
 
-        $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Base_SKU, {$table}.Image = {$group_table}.Image, {$table}.Selling = FALSE ";
+        $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE";
         $sql_result = $conn->query($sql);
 
         if ($sql_result !== TRUE) {
@@ -468,16 +327,16 @@ function reformatTable($conn, $file_name) { // ***USING***
 
 function getGroups($conn, $table_name) {
 
-    $results = $conn->query("SELECT Base_SKU, Product_ID FROM {$table_name}" . "_groups");
+    $results = $conn->query("SELECT Parent, Product_ID FROM {$table_name}" . "_groups");
     if ($results === FALSE) {
         return array("mysqli_error" => $conn->error);
     } else {
         $group_array = [];
         while ($row = $results->fetch_assoc()) {
-            if (array_key_exists($row['Base_SKU'], $group_array)) {
-                $group_array[$row['Base_SKU']] = $group_array[$row['Base_SKU']] . ',' . $row['Product_ID'];
+            if (array_key_exists($row['Parent'], $group_array)) {
+                $group_array[$row['Parent']] = $group_array[$row['Parent']] . ',' . $row['Product_ID'];
             } else {
-                $group_array[$row['Base_SKU']] = $row['Product_ID'];
+                $group_array[$row['Parent']] = $row['Product_ID'];
             }
         }
         return $group_array;
