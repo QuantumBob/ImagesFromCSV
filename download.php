@@ -3,7 +3,7 @@
 $ini_val = ini_get('upload_tmp_dir');
 $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
 if (!isset($_SESSION)) {
-    session_start();
+        session_start();
 }
 $table_name = $_SESSION['table_name'];
 //$table_name = $_POST['table_name'];
