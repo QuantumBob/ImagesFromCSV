@@ -527,7 +527,8 @@ function showProducts($start_row, $items_per_page, $filters = FALSE) { // ***USI
 
         $conn = openDB('rwk_productchooserdb');
 
-        $data = getProductData($conn, $table_name, $start_row, $items_per_page, $filters);
+//        $data = getProductData($conn, $table_name, $start_row, $items_per_page, $filters);
+        $data = getGroupedProductData($conn, $table_name, $start_row, $items_per_page, $filters);
         $html = product_data_to_html($data);
 
         return implode(' ', $html);
@@ -536,99 +537,80 @@ function showProducts($start_row, $items_per_page, $filters = FALSE) { // ***USI
 function product_data_to_html($data) { // ***USING***
         $html_array[] = '<div id="product_data" class="base-layer">';
 
-        foreach ($data as $product) {
-
+        foreach ($data as $group) {
                 
+                $group_id = $group['group_id'];
+
                 $html_array[] = '<div class="product_box">';
 
                 $html_array[] = '<div class="left-box">';
                 $html_array[] = '<div class="table-row">';
-                /* To use for carousel.
-                 * Need to implement getImages function as they are not downloaded until needed now
-                 */
-                $html_array[] = '<div id="carousel_' . $product['Product_ID'] . '" class="carousel">';
-                $html_array[] = '<input id="left_btn_' . $product['Product_ID'] . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $product['Product_ID'] . '" data-id="' . $product['Product_ID'] . '" data-direction="left"/>';
-                $html_array[] = '<input id="right_btn_' . $product['Product_ID'] . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $product['Product_ID'] . '" data-id="' . $product['Product_ID'] . '" data-direction="right"/>';
-                $images = explode(',', $product['Image']);
+                $html_array[] = '<div id="carousel_' . $group_id . '" class="carousel">';
+                $html_array[] = '<input id="left_btn_' . $group_id . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $group_id . '" data-id="' . $group_id . '" data-direction="left"/>';
+                $html_array[] = '<input id="right_btn_' . $group_id . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $group_id . '" data-id="' . $group_id . '" data-direction="right"/>';
+                $images = explode(',', $group['images']);
                 $count = count($images);
                 $html_array[] = '<ul data-count="' . $count . '">';
-//                  if ($count === 0) {
-//                  //use 'image coming soon placeholder
-//                  $no_image = './image_coming_soon.jpg';
-//                  $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-//                  } else {
-//                  foreach ($array as $variant) {
-//                  $html_array[] = '<li><img id="image_' . $variant['Product_ID'] . '" class="image" src="' . $variant['Image'] . '"></li>';
-//                  }
-//                  }
                 $index = 1;
                 foreach ($images as $image) {
-                        $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '_' . $index . '" class="image" src="' . $image . '"></li>';
+                        $html_array[] = '<li><img id="image_' . $group_id . '_' . $index . '" class="image" src="' . $image . '"></li>';
+                        $index++;
                 }
                 $html_array[] = '</ul>';
                 $html_array[] = '</div>'; // carousel
-//                $html_array[] = '<div id="image_box_' . $product['Product_ID'] . '" class="image_box">';
-//                if ($product['Image'] === "") {
-                //use 'image coming soon placeholder
-//                        $no_image = './image_coming_soon.jpg';
-//            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-//                        $html_array[] = '<img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;">';
-//                } else {
-//            $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '"></li>';
-//            $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '">';
-//                        $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $image[0] . '">';
-//                }
-//                $html_array[] = '</div>'; // image_box_
                 $html_array[] = '</div>'; //table-row
                 $html_array[] = '</div>'; // left-box
 
                 $html_array[] = '<div class="right-box">';
 
                 $html_array[] = '<div class="table-row">';
-                $html_array[] = '<div class="info-box">';
 
-                $html_array[] = '<div class="table-row">';
-                $html_array[] = '<span class="left-span">Name : <label id="name_' . $product['Product_ID'] . '">' . $product['Name'] . '</label></span>';
-                $html_array[] = '<span class="left-span">Brand : <label id="brand_' . $product['Product_ID'] . '">' . $product['Brand'] . '</label></span>';
-                $html_array[] = '</div>'; // table-row
+                foreach ($group['products'] as $product) {
+                        $html_array[] = '<div class="info-box">';
 
-                $html_array[] = '<div class="table-row">';
-                $html_array[] = '<span class="left-span">Price : £<label id="price_' . $product['Product_ID'] . '">' . $product['Price_RRP'] . '</label></span>';
-                $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $product['Product_ID'] . '">' . $product['Trade_Price'] . '</label></span>';
+                        $html_array[] = '<div class="table-row">';
+                        $html_array[] = '<span class="left-span">Name : <label id="name_' . $product['Product_ID'] . '">' . $product['Name'] . '</label></span>';
+                        $html_array[] = '<span class="left-span">Brand : <label id="brand_' . $product['Product_ID'] . '">' . $product['Brand'] . '</label></span>';
+                        $html_array[] = '</div>'; // table-row
 
-                if ($product['Selling'] == TRUE) {
-                        $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $product['Product_ID'] . '" checked></span>';
-                } else {
-                        $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $product['Product_ID'] . '"></span>';
-                }
-                $html_array[] = '</div>'; // table-row
+                        $html_array[] = '<div class="table-row">';
+                        $html_array[] = '<span class="left-span">Price : £<label id="price_' . $product['Product_ID'] . '">' . $product['Price_RRP'] . '</label></span>';
+                        $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $product['Product_ID'] . '">' . $product['Trade_Price'] . '</label></span>';
 
-                $html_array[] = '<div class="table-row">';
-                $html_array[] = '<span class="left-span">Product ID : <label id="product_id_' . $product['Product_ID'] . '">' . $product['Product_ID'] . '</label></span>';
-                $html_array[] = '<span class="left-span">SKU : <label id="sku_' . $product['Product_ID'] . '">' . $product['SKU'] . '</label></span>';
-                $html_array[] = '</div>'; // table-row
+                        if ($product['Selling'] == TRUE) {
+                                $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $product['Product_ID'] . '" checked></span>';
+                        } else {
+                                $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $product['Product_ID'] . '"></span>';
+                        }
+                        $html_array[] = '</div>'; // table-row
 
-                $html_array[] = '<div class="table-row">';
-                $html_array[] = '<span class="left-span">Variations</span>';
-                $html_array[] = '<span class="left-span">Size : <label id="size_' . $product['Product_ID'] . '">' . $product['Size'] . '</label></span>';
-                $html_array[] = '<span class="left-span">Colour : <label id="colour_' . $product['Product_ID'] . '">' . $product['Colour'] . '</label></span>';
-                $html_array[] = '</div>'; // table-row
+                        $html_array[] = '<div class="table-row">';
+                        $html_array[] = '<span class="left-span">Product ID : <label id="product_id_' . $product['Product_ID'] . '">' . $product['Product_ID'] . '</label></span>';
+                        $html_array[] = '<span class="left-span">SKU : <label id="sku_' . $product['Product_ID'] . '">' . $product['SKU'] . '</label></span>';
+                        $html_array[] = '</div>'; // table-row
 
-                $html_array[] = '<div class="table-row">';
-                //new   
-                $html_array[] = '<div class="popover__wrapper">';
-                $html_array[] = '<span class="left-span">Stock Type : <label id="stock_type_' . $product['Product_ID'] . '">' . $product['Stock_Type'] . '</label></span>';
-                $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
+                        $html_array[] = '<div class="table-row">';
+                        $html_array[] = '<span class="left-span">Variations</span>';
+                        $html_array[] = '<span class="left-span">Size : <label id="size_' . $product['Product_ID'] . '">' . $product['Size'] . '</label></span>';
+                        $html_array[] = '<span class="left-span">Colour : <label id="colour_' . $product['Product_ID'] . '">' . $product['Colour'] . '</label></span>';
+                        $html_array[] = '</div>'; // table-row
 
-                $html_array[] = '<div class="popover__wrapper">';
-                $html_array[] = '<span class="left-span">Stock Level : <label id="stock_level_' . $product['Product_ID'] . '">' . $product['Stock_Level'] . '</label></span>';
-                $html_array[] = '<div class="popover__content"><p class="popover__message">Green – this item is in stock<br>Amber – this item is in stock, but stock levels are low<br>Red – this item is out of stock or sold out<br>Blue – this item is pre-order continuity (available all year) or pre-order fashion</p></div></div>';
-                // end
+                        $html_array[] = '<div class="table-row">';
+                        //new   
+                        $html_array[] = '<div class="popover__wrapper">';
+                        $html_array[] = '<span class="left-span">Stock Type : <label id="stock_type_' . $product['Product_ID'] . '">' . $product['Stock_Type'] . '</label></span>';
+                        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
+
+                        $html_array[] = '<div class="popover__wrapper">';
+                        $html_array[] = '<span class="left-span">Stock Level : <label id="stock_level_' . $product['Product_ID'] . '">' . $product['Stock_Level'] . '</label></span>';
+                        $html_array[] = '<div class="popover__content"><p class="popover__message">Green – this item is in stock<br>Amber – this item is in stock, but stock levels are low<br>Red – this item is out of stock or sold out<br>Blue – this item is pre-order continuity (available all year) or pre-order fashion</p></div></div>';
+                        // end
 //        $html_array[] = '<span class="left-span">Stock Type : <label id="stock_type_' . $product['Product_ID'] . '">' . $product['Stock_Type'] . '</label></span>';
 //        $html_array[] = '<span class="left-span">Stock Level : <label id="stock_level_' . $product['Product_ID'] . '">' . $product['Stock_Level'] . '</label></span>';
-                $html_array[] = '</div>'; // table-row
+                        $html_array[] = '</div>'; // table-row
 
-                $html_array[] = '</div>'; //info-box
+                        $html_array[] = '</div>'; //info-box
+                }
                 $html_array[] = '</div>'; // table-row
 
                 $html_array[] = '<div class="table-row">';
@@ -1011,7 +993,7 @@ function splitCats($input) {
 //
 //        $result = str_replace($search, $replace, $input);
 //        $result_array = explode(',', $result);
-        
+
         $result_array = explode(',', $input);
 
 //        $transliteration = array('babydolls' => 'babydoll', 'dresses' => 'dress', );

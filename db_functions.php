@@ -94,6 +94,96 @@ function getProductsByProductCode($ProductCode, $table_name) {
         return $result->fetch_all(MYSQLI_ASSOC);
 }
 
+function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE) {
+
+        $sql = "SELECT Group_ID, Product_IDs FROM {$table_name}_groups";
+        $sql .= " LIMIT {$start_row}, {$items_per_page}";
+        $group_results = $conn->query($sql);
+
+        if ($group_results !== FALSE) {
+
+                foreach ($group_results as $group_row) {
+                        $image_group = "";
+                        
+                        $sql = "SELECT * FROM {$table_name} WHERE Product_ID IN ({$group_row['Product_IDs']})";
+
+                        if ($filters[0] !== FALSE AND $filters[0] !== 'All') {
+                                $filter_groups = [];
+                                foreach ($filters as $filter) {
+                                        $pos = strpos($filter, "=");
+                                        $lhs = substr($filter, 0, $pos);
+                                        $lhs = trim($lhs);
+                                        $rhs = substr($filter, $pos + 1);
+                                        $rhs = trim($rhs);
+                                        $rhs = "'$rhs'";
+
+                                        if (array_key_exists($lhs, $filter_groups)) {
+                                                $filter_groups[$lhs] = $filter_groups[$lhs] . ',' . $rhs;
+                                        } else {
+                                                $filter_groups[$lhs] = $rhs;
+                                        }
+                                }
+                                $sql .= " WHERE ";
+                                foreach ($filter_groups as $key => $filter) {
+                                        $sql .= "{$key} IN ({$filter})";
+                                        $sql .= " AND ";
+                                }
+                                $sql = rtrim($sql, 'AND ');
+                        }
+
+                        $product_results = $conn->query($sql);
+
+                        if ($product_results !== FALSE) {
+                                foreach ($product_results as $product) {
+                                        $image_array_in = explode(',', $product['Image']);
+                                        $image_array_out = [];
+                                        $update = FALSE;
+                                        $index = 0;
+
+                                        foreach ($image_array_in as $url) {
+                                                if (substr($url, 0, 8) !== './media/') {
+                                                        $url = getImage($url, $product['Brand'], $product['SKU'], $index);
+                                                        // need to update url in database
+                                                        $update = TRUE;
+                                                }
+                                                $index++;
+                                                $image_array_out[] = $url;
+                                        }
+
+                                        $images = implode(',', $image_array_out);
+                                        $image_group .= ',' . $images;
+
+                                        if ($update) {
+                                                $result = updateImageField($conn, $table_name, $images, $product['Product_ID']);
+                                        }
+
+                                        $grouped_array[] = [
+                                            'Selling' => $product['Selling'],
+                                            'Product_ID' => $product['Product_ID'],
+                                            'Name' => $product['Name'],
+                                            'SKU' => $product['SKU'],
+                                            'Price_RRP' => $product['Price_RRP'],
+                                            'Trade_Price' => $product['Trade_Price'],
+                                            'Description' => $product['Description'],
+                                            'Image' => $images,
+                                            'Colour' => $product['Colour'],
+                                            'Size' => $product['Size'],
+                                            'Stock_Type' => $product['Stock_Type'],
+                                            'Stock_Level' => $product['Stock_Level'],
+                                            'Brand' => $product['Brand']
+                                        ];
+                                }
+                                $image_group = ltrim($image_group, ',');
+                                $array[] = array('group_id' => $group_row['Group_ID'], 'images' => $image_group, 'products' => $grouped_array);
+                                unset($grouped_array);
+                        }
+                }
+                return $array;
+        } else {
+                return array("mysqli_error" => $conn->error);
+        }
+}
+
 function getProductData($conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE) { // ***USING***
         $sql = "SELECT * FROM {$table_name}";
 
@@ -185,7 +275,9 @@ function updateImageField($conn, $table_name, $imageString, $id) {
 
 function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
         $checkbox = json_decode($selling_list, TRUE);
-        $update = "UPDATE {$table_name} SET Selling = {$checkbox['checked']} WHERE Product_ID = {$checkbox['id']}";
+        $selling = $checkbox['checked'] ? 'TRUE' : 'FALSE';
+        $update = "UPDATE {$table_name} SET Selling = {$selling} WHERE Product_ID = {$checkbox['id']}";
+//        $update = "UPDATE {$table_name} SET Selling = {$selling_list->checked} WHERE Product_ID = {$checkbox['id']}";
 
         $sql = $update;
         if ($conn->query($sql)) {
@@ -271,7 +363,7 @@ function bulkFillTable($conn, $file_name) { // ***USING***
                 return array("mysqli_error" => $conn->error);
         }
         // "ALTER TABLE `alterego_current_stockline_green` ADD PRIMARY KEY(`Product_ID`);"
-        $sql = "ALTER TABLE {$table} ADD Selling VARCHAR(255) FIRST, ADD Parent VARCHAR(255), ADD Local_Images VARCHAR(255), ADD Local_SKU VARCHAR(255) FIRST, ADD PRIMARY KEY(`Product_ID`)";
+        $sql = "ALTER TABLE {$table} ADD Selling BOOLEAN FIRST, ADD Parent VARCHAR(255), ADD Local_Images VARCHAR(255), ADD Local_SKU VARCHAR(255) FIRST, ADD PRIMARY KEY(`Product_ID`)";
 
         $result = $conn->query($sql);
         if ($result !== TRUE) {
@@ -287,7 +379,7 @@ function createGroupsTable($conn, $file_name) { // ***USING***
                 return array("mysqli_error" => $conn->error);
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Parent VARCHAR(255), Product_ID VARCHAR(255), Image VARCHAR(255))";
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Parent VARCHAR(255), Product_IDs VARCHAR(255), Image VARCHAR(255))";
 
         if ($conn->query($sql) === TRUE) {
                 return TRUE;
@@ -391,6 +483,7 @@ function reformatMainTable($conn, $file_name) {
         if ($results !== FALSE) {
 
                 while ($row = $results->fetch_assoc()) {
+
                         if ($row['Product_Range'] === "") {
                                 $ParentSKU = $row['Name'];
                         } else {
@@ -398,10 +491,10 @@ function reformatMainTable($conn, $file_name) {
                         }
                         $ParentSKU = generateParentSKU($ParentSKU);
 
-                        $ParentSKU = "'$ParentSKU'";
+//                        $ParentSKU = "'$ParentSKU'";
 
                         $Product_ID = $row['Product_ID'];
-                        $Product_ID = "'$Product_ID'";
+//                        $Product_ID = "'$Product_ID'";
 
                         if (!empty($row['Brand'])) {
                                 $brand = $row['Brand'];
@@ -424,14 +517,29 @@ function reformatMainTable($conn, $file_name) {
                         $image_array = createImageArray($row);
                         $image_string = implode(',', $image_array);
                         $image_string = rtrim($image_string, ', ');
+//                        $image_string = "'$image_string'";
+//                        $groups_array[] = "({$ParentSKU},{$Product_IDs},{$image_string})";
+                        if (key_exists($ParentSKU, $groups_array)) {
+                                $groups_array[$ParentSKU]['Product_IDs'] .= ',' . $Product_ID;
+                        } else {
+                                $groups_array[$ParentSKU] = array('Product_IDs' => $Product_ID, 'Image_string' => $image_string);
+                        }
+                }
+                $values = "";
+                foreach ($groups_array as $key => $group_array) {
+                        $ParentSKU = "'$key'";
+                        $Product_IDs = $group_array['Product_IDs'];
+                        $Product_IDs = "'$Product_IDs'";
+                        $image_string = $group_array['Image_string'];
                         $image_string = "'$image_string'";
 
-                        $groups_array[] = "({$ParentSKU},{$Product_ID},{$image_string})";
+                        $values = $values . ',' . "({$ParentSKU},{$Product_IDs},{$image_string})";
                 }
 
+                $values = ltrim($values, ',');
                 $group_table = $table . "_groups";
-                $values = implode(',', $groups_array);
-                $sql = "INSERT INTO {$group_table} (Parent, Product_ID, Image) VALUES {$values}"; // change Product_Range to Parent_SKU
+//                $values = implode(',', $groups_array);
+                $sql = "INSERT INTO {$group_table} (Parent, Product_IDs, Image) VALUES {$values}"; // change Product_Range to Parent_SKU
                 $sql_result = $conn->query($sql);
 
                 if ($sql_result !== TRUE) {
@@ -456,7 +564,13 @@ function reformatMainTable($conn, $file_name) {
                         return array("mysqli_error" => $conn->error);
                 }
 
-                $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE";
+//                $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE";
+//                $sql = "UPDATE {$table} INNER JOIN {$group_table} SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE WHERE {$table}.Product_ID IN {$group_table}.Product_IDs";
+
+                $sql = "UPDATE {$table} SET Selling = TRUE";
+
+//                $sql = "SELECT  {$group_table}.Parent, {$group_table}.Image FROM {$group_table} INNER JOIN {$table} WHERE {$table}.Product_ID IN {$group_table}.Product_IDs";
+
                 $sql_result = $conn->query($sql);
 
                 if ($sql_result !== TRUE) {
@@ -469,16 +583,16 @@ function reformatMainTable($conn, $file_name) {
 
 function getGroups($conn, $table_name) {
 
-        $results = $conn->query("SELECT Parent, Product_ID FROM {$table_name}" . "_groups");
+        $results = $conn->query("SELECT Parent, Product_IDs FROM {$table_name}" . "_groups");
         if ($results === FALSE) {
                 return array("mysqli_error" => $conn->error);
         } else {
                 $group_array = [];
                 while ($row = $results->fetch_assoc()) {
                         if (array_key_exists($row['Parent'], $group_array)) {
-                                $group_array[$row['Parent']] = $group_array[$row['Parent']] . ',' . $row['Product_ID'];
+                                $group_array[$row['Parent']] = $group_array[$row['Parent']] . ',' . $row['Product_IDs'];
                         } else {
-                                $group_array[$row['Parent']] = $row['Product_ID'];
+                                $group_array[$row['Parent']] = $row['Product_IDs'];
                         }
                 }
                 return $group_array;
