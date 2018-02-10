@@ -139,16 +139,24 @@ function get_group_id_base($largest_id) {
 }
 
 function getImage($file_url, $brand, $SKU, $index) { // ***USING***
-        $media_dir = $GLOBALS['media_dir'] . strtolower($brand) . '/';
+        $media_dir = $GLOBALS['media_dir'];
+
+        if (!is_dir($media_dir)) {
+                mkdir($media_dir);
+        }
+
+        if (basename($file_url) === "" || basename($file_url) === "no_selection") {
+                return "$media_dir . image_coming_soon.jpg";
+        }
+
+        $media_dir = $media_dir . strtolower($brand) . '/';
         $media_dir = str_replace(' ', '', $media_dir);
         $SKU = str_replace('/', '', $SKU);
 
         if (!is_dir($media_dir)) {
                 mkdir($media_dir);
         }
-        if (basename($file_url) === "" || basename($file_url) === "no_selection") {
-                return "$media_dir . image_coming_soon.jpg";
-        }
+
         // $file_url should be one url but sometimes we are sent two
         $source = explode(',', $file_url);
         $file = $source[0];
@@ -530,42 +538,47 @@ function product_data_to_html($data) { // ***USING***
 
         foreach ($data as $product) {
 
+                
                 $html_array[] = '<div class="product_box">';
 
                 $html_array[] = '<div class="left-box">';
                 $html_array[] = '<div class="table-row">';
                 /* To use for carousel.
                  * Need to implement getImages function as they are not downloaded until needed now
-                 * 
-                  $html_array[] = '<div id="carousel_' . $first_id . '" class="carousel">';
-                  $html_array[] = '<input id="left_btn_' . $first_id . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="left"/>';
-                  $html_array[] = '<input id="right_btn_' . $first_id . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="right"/>';
-                  $html_array[] = '<ul data-count="' . $count . '">';
-                  if ($count === 0) {
-                  //use 'image coming soon placeholder
-                  $no_image = './image_coming_soon.jpg';
-                  $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-                  } else {
-                  foreach ($array as $variant) {
-                  $html_array[] = '<li><img id="image_' . $variant['Product_ID'] . '" class="image" src="' . $variant['Image'] . '"></li>';
-                  }
-                  }
-                  $html_array[] = '</ul>';
-                  $html_array[] = '</div>'; // carousel
                  */
-                $html_array[] = '<div id="image_box_' . $product['Product_ID'] . '" class="image_box">';
-                if ($product['Image'] === "") {
-                        //use 'image coming soon placeholder
-                        $no_image = './image_coming_soon.jpg';
+                $html_array[] = '<div id="carousel_' . $product['Product_ID'] . '" class="carousel">';
+                $html_array[] = '<input id="left_btn_' . $product['Product_ID'] . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $product['Product_ID'] . '" data-id="' . $product['Product_ID'] . '" data-direction="left"/>';
+                $html_array[] = '<input id="right_btn_' . $product['Product_ID'] . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $product['Product_ID'] . '" data-id="' . $product['Product_ID'] . '" data-direction="right"/>';
+                $images = explode(',', $product['Image']);
+                $count = count($images);
+                $html_array[] = '<ul data-count="' . $count . '">';
+//                  if ($count === 0) {
+//                  //use 'image coming soon placeholder
+//                  $no_image = './image_coming_soon.jpg';
+//                  $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
+//                  } else {
+//                  foreach ($array as $variant) {
+//                  $html_array[] = '<li><img id="image_' . $variant['Product_ID'] . '" class="image" src="' . $variant['Image'] . '"></li>';
+//                  }
+//                  }
+                $index = 1;
+                foreach ($images as $image) {
+                        $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '_' . $index . '" class="image" src="' . $image . '"></li>';
+                }
+                $html_array[] = '</ul>';
+                $html_array[] = '</div>'; // carousel
+//                $html_array[] = '<div id="image_box_' . $product['Product_ID'] . '" class="image_box">';
+//                if ($product['Image'] === "") {
+                //use 'image coming soon placeholder
+//                        $no_image = './image_coming_soon.jpg';
 //            $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-                        $html_array[] = '<img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;">';
-                } else {
-                        $image = explode(',', $product['Image']);
+//                        $html_array[] = '<img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;">';
+//                } else {
 //            $html_array[] = '<li><img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '"></li>';
 //            $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $product['Image'] . '">';
-                        $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $image[0] . '">';
-                }
-                $html_array[] = '</div>'; // image_box_
+//                        $html_array[] = '<img id="image_' . $product['Product_ID'] . '" class="image" src="' . $image[0] . '">';
+//                }
+//                $html_array[] = '</div>'; // image_box_
                 $html_array[] = '</div>'; //table-row
                 $html_array[] = '</div>'; // left-box
 
@@ -993,16 +1006,19 @@ function compareFiles($file_a, $file_b) {
 function splitCats($input) {
 
         $cat_array = [];
-        $search = array(' ', ';');
-        $replace = ',';
-
-        $result = str_replace($search, $replace, $input);
-        $result_array = explode('.', $result);
+//        $search = array(' ', ';');
+//        $replace = ',';
+//
+//        $result = str_replace($search, $replace, $input);
+//        $result_array = explode(',', $result);
+        
+        $result_array = explode(',', $input);
 
 //        $transliteration = array('babydolls' => 'babydoll', 'dresses' => 'dress', );
         foreach ($result_array as $cat) {
                 //maybe too complicated!
 //                $cat = str_replace(array_keys($transliteration), array_values($transliteration), strtolower($cat));
+                $cat = str_replace('&', 'and', $cat);
                 if (strtolower($cat) !== 'dress') {
                         $cat = ucfirst(rtrim($cat, 's'));
                         if ($cat === 'Dresse') {

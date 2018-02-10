@@ -127,6 +127,27 @@ function getProductData($conn, $table_name, $start_row, $items_per_page, $filter
         if ($results !== FALSE) {
                 foreach ($results as $row) {
 
+                        $image_array_in = explode(',', $row['Image']);
+                        $image_array_out = [];
+                        $update = FALSE;
+                        $index = 0;
+
+                        foreach ($image_array_in as $url) {
+                                if (substr($url, 0, 8) !== './media/') {
+                                        $url = getImage($url, $row['Brand'], $row['SKU'], $index);
+                                        // need to update url in database
+                                        $update = TRUE;
+                                }
+                                $index++;
+                                $image_array_out[] = $url;
+                        }
+
+                        $images = implode(',', $image_array_out);
+
+                        if ($update) {
+                                $result = updateImageField($conn, $table_name, $images, $row['Product_ID']);
+                        }
+
                         $array[] = [
                             'Selling' => $row['Selling'],
                             'Product_ID' => $row['Product_ID'],
@@ -135,7 +156,8 @@ function getProductData($conn, $table_name, $start_row, $items_per_page, $filter
                             'Price_RRP' => $row['Price_RRP'],
                             'Trade_Price' => $row['Trade_Price'],
                             'Description' => $row['Description'],
-                            'Image' => $row['Image'],
+//                            'Image' => $row['Image'],
+                            'Image' => $images,
                             'Colour' => $row['Colour'],
                             'Size' => $row['Size'],
                             'Stock_Type' => $row['Stock_Type'],
@@ -144,6 +166,18 @@ function getProductData($conn, $table_name, $start_row, $items_per_page, $filter
                         ];
                 }
                 return $array;
+        } else {
+                return array("mysqli_error" => $conn->error);
+        }
+}
+
+function updateImageField($conn, $table_name, $imageString, $id) {
+
+        $update = "UPDATE {$table_name} SET Image = '{$imageString}' WHERE Product_ID = {$id}";
+
+        $sql = $update;
+        if ($conn->query($sql)) {
+                return TRUE;
         } else {
                 return array("mysqli_error" => $conn->error);
         }
@@ -344,7 +378,7 @@ function getAllImageFields($conn, $table, $product_id) {
 //    return $image_array;
 //}
 
-function reformatTable($conn, $file_name) {
+function reformatMainTable($conn, $file_name) {
 
         $table = str_replace(".csv", "", $file_name);
         $groups_array = [];
@@ -357,52 +391,38 @@ function reformatTable($conn, $file_name) {
         if ($results !== FALSE) {
 
                 while ($row = $results->fetch_assoc()) {
-
-//            $baseSKU = getBaseSKU($row['SKU']);
-//            $baseSKU = str_replace("'", '', $baseSKU);
-//            $baseSKU = "'$baseSKU'";
-
                         if ($row['Product_Range'] === "") {
                                 $ParentSKU = $row['Name'];
                         } else {
                                 $ParentSKU = $row['Product_Range'];
                         }
                         $ParentSKU = generateParentSKU($ParentSKU);
-                        // get $ParentSKU from Product_Range or if blank from Name.
-                        // remove ()/ and replace with _
-                        // convert to all upper case
-                        // remove colour from end of string
 
                         $ParentSKU = "'$ParentSKU'";
 
                         $Product_ID = $row['Product_ID'];
                         $Product_ID = "'$Product_ID'";
 
-                        if (!empty($row['Brand']) && !in_array($row['Brand'], $brands_array)) {
-                                $brands_array[] = $row['Brand'];
+                        if (!empty($row['Brand'])) {
+                                $brand = $row['Brand'];
+                                $brand = "'$brand'";
+
+                                if (!in_array("({$brand})", $brands_array)) {
+                                        $brands_array[] = "({$brand})";
+                                }
                         }
 
                         if (!empty($row['Categories'])) {
                                 $array = splitCats($row['Categories']);
                                 foreach ($array as $cat) {
-                                        if (!in_array($cat, $categories_array)) {
-                                                $categories_array[] = $cat;
+                                        $cat = "'$cat'";
+                                        if (!in_array("({$cat})", $categories_array)) {
+                                                $categories_array[] = "({$cat})";
                                         }
                                 }
                         }
-
-                        /**         Get images when they are needed on page * */
-//            $image_array = getImageArray($row);
                         $image_array = createImageArray($row);
                         $image_string = implode(',', $image_array);
-//            $image = getImage($row['Image'], $brand, $row['SKU']);
-//            if (!empty($image_array)) {
-//                $index = 0;
-//                foreach ($image_array as $item) {
-//                    $image = $image . getImage($item, $row['Brand'], $row['SKU'], $index) . ', ';
-//                    $index ++;
-//                }
-//            }
                         $image_string = rtrim($image_string, ', ');
                         $image_string = "'$image_string'";
 
