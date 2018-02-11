@@ -48,10 +48,10 @@ include 'routing.php';
                                 <!--for current_row read group_id-->
                                 <input id="current_row" type="hidden" name="current_row" value="0" />
                                 <input id="products_table" type="hidden" name="table_name" value="0" />
-                                <div id="filters" class="popover_div">
+                                <div id="filters" class="filters popover_div">
                                         <?php generateFilters(); ?>
-
                                 </div>
+                                <div id="gen_filters" class="filters"></div>
                                 <input id="next_page_btn" class="button_class align_right"type="button" name= 'next_page_btn' value="Next Page" hidden />
                                 <input id="prev_page_btn" class="button_class align_right" type="button" name= 'prev_page_btn' value="Previous Page" hidden />
                                 <select id="items_per_page"  class="align_right"  name="items_per_page">

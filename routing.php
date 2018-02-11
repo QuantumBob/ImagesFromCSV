@@ -70,7 +70,10 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         break;
 
                 case 'importAlterEgo': // ***USING***
-                        $file_name = uploadCSV();
+                        if (empty(basename($_FILES['uploadedfile']['name']))) {
+                                break;
+                        }
+                        $file_name = importCSV();
                         $conn = openDB('rwk_productchooserdb');
                         bulkFillTable($conn, $file_name);
                         createGroupsTable($conn, $file_name);
@@ -82,8 +85,9 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         $items_per_page = $_POST['ipp'];
                         $filters = explode(',', $_POST['filter']);
                         $html = showProducts($start_row, $items_per_page, $filters);
+                        $filters = appendFilters();
 
-                        $return = array('row' => $start_row, 'html' => $html);
+                        $return = array('row' => $start_row, 'html' => $html, 'filters' => $filters);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
                         echo $json;
@@ -102,8 +106,9 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         }
                         $_SESSION['table_name'] = $_POST['table_name'];
                         $html = showProducts($start_row, $items_per_page, $filters);
+                        $filters = appendFilters();
 
-                        $return = array('row' => $start_row, 'html' => $html);
+                        $return = array('row' => $start_row, 'html' => $html, 'filters' => $filters);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
                         echo $json;
@@ -132,7 +137,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         echo $json;
                         break;
 
-                case 'updateSelling' : 
+                case 'updateSelling' :
                         updateSelling();
                         break;
 

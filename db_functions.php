@@ -1,7 +1,7 @@
 <?php
 
 function connectToServer() {
-        
+
         $servername = "localhost";
         $username = "root";
         $password = "";
@@ -16,7 +16,7 @@ function connectToServer() {
 }
 
 function connectToDb($db_name) {
-        
+
         $servername = "localhost";
         $username = "root";
         $password = "";
@@ -31,7 +31,7 @@ function connectToDb($db_name) {
 }
 
 function openDB($db_name) {
-        
+
         // connect to server
         $conn = connectToServer();
 
@@ -67,15 +67,50 @@ function getProductsByID($conn, $table_name, $IDs) {
         return $result->fetch_all(MYSQLI_ASSOC);
 }
 
+function getBrands($table_name) {
+
+        $conn = openDB('rwk_productchooserdb');
+        $sql = "SELECT * FROM {$table_name}_brands";
+        $results = $conn->query($sql);
+        $error = $conn->error;
+        $conn->close();
+
+        if ($results !== FALSE) {
+                return $results;
+        } else {
+                return FALSE;
+        }
+}
+
+function getCategories($table_name) {
+
+        $conn = openDB('rwk_productchooserdb');
+        $sql = "SELECT * FROM {$table_name}_categories";
+        $results = $conn->query($sql);
+        $error = $conn->error;
+        $conn->close();
+
+        if ($results !== FALSE) {
+                return $results;
+        } else {
+                return FALSE;
+        }
+}
+
 function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE) {
 
         $sql = "SELECT Group_ID, Product_IDs FROM {$table_name}_groups";
-        $sql .= " LIMIT {$start_row}, {$items_per_page}";
+        $sql .= " LIMIT {$start_row}, 1000000";
         $group_results = $conn->query($sql);
 
         if ($group_results !== FALSE) {
-
+                $start_group = 0;
+                $num_groups = 0;
                 foreach ($group_results as $group_row) {
+
+                        if ($num_groups >= $items_per_page) {
+                                return $array;
+                        }
                         $image_group = "";
 
                         $sql = "SELECT * FROM {$table_name} WHERE Product_ID IN ({$group_row['Product_IDs']})";
@@ -88,7 +123,7 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
                                         $lhs = trim($lhs);
                                         $rhs = substr($filter, $pos + 1);
                                         $rhs = trim($rhs);
-                                        $rhs = "'$rhs'";
+//                                        $rhs = "'$rhs'";
 
                                         if (array_key_exists($lhs, $filter_groups)) {
                                                 $filter_groups[$lhs] = $filter_groups[$lhs] . ',' . $rhs;
@@ -96,9 +131,16 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
                                                 $filter_groups[$lhs] = $rhs;
                                         }
                                 }
-                                $sql .= " WHERE ";
+                                $sql .= " AND ";
                                 foreach ($filter_groups as $key => $filter) {
-                                        $sql .= "{$key} IN ({$filter})";
+                                        if ($key === 'Brand' && $filter === 'All'){
+                                                continue;
+                                        }
+                                         if ($key === 'Category'){
+                                                $sql .= "INSTR('{$key}', '{$filter}') > 0";
+                                                continue;
+                                        }
+                                        $sql .= "{$key} IN ('{$filter}')";
                                         $sql .= " AND ";
                                 }
                                 $sql = rtrim($sql, 'AND ');
@@ -106,7 +148,8 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
 
                         $product_results = $conn->query($sql);
 
-                        if ($product_results !== FALSE) {
+                        if ($product_results !== FALSE && $product_results->num_rows !== 0) {
+                                $num_groups++;
                                 foreach ($product_results as $product) {
                                         $image_array_in = explode(',', $product['Image']);
                                         $image_array_out = [];
@@ -182,9 +225,12 @@ function updateSelling() {
         $sql = "UPDATE {$table_name} SET Selling = {$selling} WHERE Product_ID = {$checkbox['id']}";
 
         if ($conn->query($sql)) {
+                $conn->close();
                 return TRUE;
         } else {
-                return array("mysqli_error" => $conn->error);
+                $error = $conn->error;
+                $conn->close();
+                return array("mysqli_error" => $error);
         }
 }
 
@@ -197,7 +243,7 @@ function getLargestID($table_name) {
 }
 
 function bulkFillTable($conn, $file_name) {
-        
+
         $table = str_replace(".csv", "", $file_name);
 
         $_SESSION['table_name'] = $table;
@@ -268,7 +314,7 @@ function bulkFillTable($conn, $file_name) {
 }
 
 function createGroupsTable($conn, $file_name) {
-        
+
         $table = str_replace(".csv", "_groups", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -286,7 +332,7 @@ function createGroupsTable($conn, $file_name) {
 }
 
 function createBrandsTable($conn, $file_name) {
-        
+
         $table = str_replace(".csv", "_brands", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -304,7 +350,7 @@ function createBrandsTable($conn, $file_name) {
 }
 
 function createCategoriesTable($conn, $file_name) {
-        
+
         $table = str_replace(".csv", "_categories", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -341,11 +387,7 @@ function reformatMainTable($conn, $file_name) {
                                 $ParentSKU = $row['Product_Range'];
                         }
                         $ParentSKU = generateParentSKU($ParentSKU);
-
-//                        $ParentSKU = "'$ParentSKU'";
-
                         $Product_ID = $row['Product_ID'];
-//                        $Product_ID = "'$Product_ID'";
 
                         if (!empty($row['Brand'])) {
                                 $brand = $row['Brand'];
