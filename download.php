@@ -10,8 +10,6 @@ $table_name = $_SESSION['table_name'];
 $file_url = $temp_path . '/' . $table_name . '.csv';
 $size = filesize($file_url);
 
-//set_time_limit(0);
-
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');
 header('Content-Disposition: attachment; filename="' . $table_name . '.csv"');

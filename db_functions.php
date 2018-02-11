@@ -1,6 +1,7 @@
 <?php
 
-function connectToServer() { // ***USING***
+function connectToServer() {
+        
         $servername = "localhost";
         $username = "root";
         $password = "";
@@ -14,7 +15,8 @@ function connectToServer() { // ***USING***
         return $conn;
 }
 
-function connectToDb($db_name) { // ***USING***
+function connectToDb($db_name) {
+        
         $servername = "localhost";
         $username = "root";
         $password = "";
@@ -28,11 +30,8 @@ function connectToDb($db_name) { // ***USING***
         return $conn;
 }
 
-function closeConnection($conn) {
-        $conn->close();
-}
-
-function openDB($db_name) { // ***USING***
+function openDB($db_name) {
+        
         // connect to server
         $conn = connectToServer();
 
@@ -47,50 +46,24 @@ function openDB($db_name) { // ***USING***
         return $conn;
 }
 
-function getTables() { // ***USING***
+function getTables() {
+
         $conn = openDB('rwk_productchooserdb');
         $result = $conn->query("SELECT table_name FROM information_schema.tables where table_schema='rwk_productchooserdb'");
 
         $html = array();
         foreach ($result as $table) {
-                if (stripos($table['table_name'], '_groups') === FALSE && stripos($table['table_name'], '_map') === FALSE) {
+                if (stripos($table['table_name'], '_groups') === FALSE && stripos($table['table_name'], '_map') === FALSE && stripos($table['table_name'], '_brands') === FALSE && stripos($table['table_name'], '_categories') === FALSE) {
                         $html[] = "<input id='{$table['table_name']}' class='button_class gen_table_btn'  type='button' name= '{$table['table_name']}' value='{$table['table_name']}' />";
                 }
         }
         echo implode(' ', $html);
 }
 
-function getRow($conn, $table_name, $row) {
+function getProductsByID($conn, $table_name, $IDs) {
 
-        $result = $conn->query("SELECT * FROM {$table_name} LIMIT {$row}, 1");
-        //    $data = $result->fetch_row();
-        $data = $result->fetch_assoc();
+        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$IDs})");
 
-        if ($data != null) {
-                return $data;
-        } else {
-                return FALSE;
-        }
-}
-
-function getProductByID($table_name, $ID) {
-
-        $conn = openDB('rwk_productchooserdb');
-        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$ID})");
-        return $result->fetch_all(MYSQLI_ASSOC);
-}
-
-function getProductsBySKU($SKU, $table_name) {
-
-        $conn = openDB('rwk_productchooserdb');
-        $result = $conn->query("SELECT * FROM {$table_name} WHERE Selling = TRUE AND Parent = '{$SKU}'");
-        return $result->fetch_all(MYSQLI_ASSOC);
-}
-
-function getProductsByProductCode($ProductCode, $table_name) {
-
-        $conn = openDB('rwk_productchooserdb');
-        $result = $conn->query("SELECT * FROM {$table_name} WHERE Selling = TRUE AND Parent = '{$ProductCode}'");
         return $result->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -104,7 +77,7 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
 
                 foreach ($group_results as $group_row) {
                         $image_group = "";
-                        
+
                         $sql = "SELECT * FROM {$table_name} WHERE Product_ID IN ({$group_row['Product_IDs']})";
 
                         if ($filters[0] !== FALSE AND $filters[0] !== 'All') {
@@ -184,83 +157,6 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
         }
 }
 
-function getProductData($conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE) { // ***USING***
-        $sql = "SELECT * FROM {$table_name}";
-
-        if ($filters[0] !== FALSE AND $filters[0] !== 'All') {
-                $filter_groups = [];
-                foreach ($filters as $filter) {
-                        $pos = strpos($filter, "=");
-                        $lhs = substr($filter, 0, $pos);
-                        $lhs = trim($lhs);
-                        $rhs = substr($filter, $pos + 1);
-                        $rhs = trim($rhs);
-                        $rhs = "'$rhs'";
-
-                        if (array_key_exists($lhs, $filter_groups)) {
-                                $filter_groups[$lhs] = $filter_groups[$lhs] . ',' . $rhs;
-                        } else {
-                                $filter_groups[$lhs] = $rhs;
-                        }
-                }
-                $sql .= " WHERE ";
-                foreach ($filter_groups as $key => $filter) {
-                        $sql .= "{$key} IN ({$filter})";
-                        $sql .= " AND ";
-                }
-                $sql = rtrim($sql, 'AND ');
-        }
-        $sql .= " LIMIT {$start_row}, {$items_per_page}";
-
-        $results = $conn->query($sql);
-
-        if ($results !== FALSE) {
-                foreach ($results as $row) {
-
-                        $image_array_in = explode(',', $row['Image']);
-                        $image_array_out = [];
-                        $update = FALSE;
-                        $index = 0;
-
-                        foreach ($image_array_in as $url) {
-                                if (substr($url, 0, 8) !== './media/') {
-                                        $url = getImage($url, $row['Brand'], $row['SKU'], $index);
-                                        // need to update url in database
-                                        $update = TRUE;
-                                }
-                                $index++;
-                                $image_array_out[] = $url;
-                        }
-
-                        $images = implode(',', $image_array_out);
-
-                        if ($update) {
-                                $result = updateImageField($conn, $table_name, $images, $row['Product_ID']);
-                        }
-
-                        $array[] = [
-                            'Selling' => $row['Selling'],
-                            'Product_ID' => $row['Product_ID'],
-                            'Name' => $row['Name'],
-                            'SKU' => $row['SKU'],
-                            'Price_RRP' => $row['Price_RRP'],
-                            'Trade_Price' => $row['Trade_Price'],
-                            'Description' => $row['Description'],
-//                            'Image' => $row['Image'],
-                            'Image' => $images,
-                            'Colour' => $row['Colour'],
-                            'Size' => $row['Size'],
-                            'Stock_Type' => $row['Stock_Type'],
-                            'Stock_Level' => $row['Stock_Level'],
-                            'Brand' => $row['Brand']
-                        ];
-                }
-                return $array;
-        } else {
-                return array("mysqli_error" => $conn->error);
-        }
-}
-
 function updateImageField($conn, $table_name, $imageString, $id) {
 
         $update = "UPDATE {$table_name} SET Image = '{$imageString}' WHERE Product_ID = {$id}";
@@ -273,13 +169,18 @@ function updateImageField($conn, $table_name, $imageString, $id) {
         }
 }
 
-function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
-        $checkbox = json_decode($selling_list, TRUE);
-        $selling = $checkbox['checked'] ? 'TRUE' : 'FALSE';
-        $update = "UPDATE {$table_name} SET Selling = {$selling} WHERE Product_ID = {$checkbox['id']}";
-//        $update = "UPDATE {$table_name} SET Selling = {$selling_list->checked} WHERE Product_ID = {$checkbox['id']}";
+function updateSelling() {
 
-        $sql = $update;
+        if (!isset($_SESSION)) {
+                session_start();
+        }
+        $table_name = $_SESSION['table_name'];
+        $conn = openDB('rwk_productchooserdb');
+
+        $checkbox = json_decode($_POST['selling'], TRUE);
+        $selling = $checkbox['checked'] ? 'TRUE' : 'FALSE';
+        $sql = "UPDATE {$table_name} SET Selling = {$selling} WHERE Product_ID = {$checkbox['id']}";
+
         if ($conn->query($sql)) {
                 return TRUE;
         } else {
@@ -287,7 +188,7 @@ function updateSellingDB($conn, $table_name, $selling_list) { // ***USING***
         }
 }
 
-function get_largest_id($table_name) {
+function getLargestID($table_name) {
 
         $conn = openDB('rwk_productchooserdb');
         $result = $conn->query("SELECT MAX(Product_ID) AS max_id FROM $table_name");
@@ -295,13 +196,8 @@ function get_largest_id($table_name) {
         return $row['max_id'];
 }
 
-function skuExists($sku, $table) {
-
-        $conn = openDB('rwk_productchooserdb');
-        return $conn->query("SELECT Group_ID FROM {$table} WHERE SKU = {$sku}");
-}
-
-function bulkFillTable($conn, $file_name) { // ***USING***
+function bulkFillTable($conn, $file_name) {
+        
         $table = str_replace(".csv", "", $file_name);
 
         $_SESSION['table_name'] = $table;
@@ -371,7 +267,8 @@ function bulkFillTable($conn, $file_name) { // ***USING***
         }
 }
 
-function createGroupsTable($conn, $file_name) { // ***USING***
+function createGroupsTable($conn, $file_name) {
+        
         $table = str_replace(".csv", "_groups", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -388,7 +285,8 @@ function createGroupsTable($conn, $file_name) { // ***USING***
         }
 }
 
-function createBrandsTable($conn, $file_name) { // ***USING***
+function createBrandsTable($conn, $file_name) {
+        
         $table = str_replace(".csv", "_brands", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -405,7 +303,8 @@ function createBrandsTable($conn, $file_name) { // ***USING***
         }
 }
 
-function createCategoriesTable($conn, $file_name) { // ***USING***
+function createCategoriesTable($conn, $file_name) {
+        
         $table = str_replace(".csv", "_categories", $file_name);
 
         $sql = "DROP TABLE IF EXISTS {$table}";
@@ -421,54 +320,6 @@ function createCategoriesTable($conn, $file_name) { // ***USING***
                 return FALSE;
         }
 }
-
-// returns an array of the image fields for one row of data 
-function getAllImageFields($conn, $table, $product_id) {
-
-        $image_array = [];
-
-        $fields = 'Image, Image_1, Image_2, Image_3, Image_4, Image_5, Image_6, Image_7, Image_8, Image_9, Image_10';
-        $sql = "SELECT  {$fields} FROM {$table} WHERE Product_ID = {$product_id}";
-        $results = $conn->query($sql);
-        $results_array = mysqli_fetch_all($results, MYSQLI_ASSOC);
-        if ($results === FALSE) {
-                return array("mysqli_error" => $conn->error);
-        } else {
-                return $results_array;
-        }
-}
-
-//function getImageArray($conn, $table) {
-//
-//    $image_array = [];
-//
-//    $fields = 'Image, Image_1, Image_2, Image_3, Image_4, Image_5, Image_6, Image_7, Image_8, Image_9, Image_10';
-//    $sql = "SELECT  {$fields} FROM {$table}";
-//    $results = $conn->query($sql);
-//    $results_array = mysqli_fetch_all($results, MYSQLI_ASSOC);
-//    if ($results === FALSE) {
-//        return array("mysqli_error" => $conn->error);
-//    } else {
-////        $value = str_replace(',', ' ', $results_array['Image']);
-////        $value = explode(' ', $results_array['Image']);
-////        $image_array [] = $results_array['Image'][0];
-//        foreach ($results_array as $values) {
-//            $temp = str_replace(',', ' ', $values['Image']);
-//            $url_array = explode(' ', $temp);
-//            $image_array [] = $url_array[0];
-//            foreach ($values as $image) {
-//                $temp = str_replace(',', ' ', $image);
-//                $url_array = explode(' ', $temp);
-//                foreach ($url_array as $url) {
-//                    if (!in_array($url, $image_array) && stripos($url, 'https://') === 0) {
-//                        $image_array [] = $url;
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    return $image_array;
-//}
 
 function reformatMainTable($conn, $file_name) {
 

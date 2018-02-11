@@ -7,7 +7,7 @@ include 'routing.php';
 <html>
         <head>
                 <meta charset="UTF-8">
-                <link rel="stylesheet" type="text/css" href="imagesfromcsv.css" />
+                <link rel="stylesheet" type="text/css" href="styles.css" />
                 <script src="jquery-3.2.1.js"></script>
                 <script src="scripts.js"></script>
                 <title></title>
@@ -15,20 +15,7 @@ include 'routing.php';
         <body>
                 <h1>
                         <input id="home_btn" class="button_class spacer-right" type="button" name= 'home_btn' value="Home" />
-                        Product Importer
-                        <!--div class="popover__wrapper align_right no_border">
-                                <img class="icon" src="./resources/info-xxl.png">                       
-                                <div class="popover__content">
-                                        <p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p>
-                                        <p class="popover__message">Discontinued Lines are only available to order while stocks last.</p>
-                                        <p class="popover__message">Pre-Order Continuity  lines are not held in stock but are available to order all year round <br> 
-                                                (The lead time from order to delivery is usually around  14-21 days.)</p>
-                                        <p class="popover__message">Green – this item is in stock</p>
-                                        <p class="popover__message">Amber – this item is in stock, but stock levels are low</p>
-                                        <p class="popover__message">Red – this item is out of stock or sold out</p>
-                                        <p class="popover__message">Blue – this item is pre-order continuity (available all year) or pre-order fashion</p>
-                                </div>
-                        </div-->             
+                        Product Importer            
                 </h1>
 
                 <div id="upload_div" class="file_form_div">
@@ -36,7 +23,7 @@ include 'routing.php';
                                 <label for="uploadedfile">Choose a CSV file to upload</label>
                                 <input id="uploadedfile" name="uploadedfile" type="file"  />
                                 <label id="upload_file_name">No File Selected</label>  
-<?php // getTables();  ?>
+                                <?php getTables(); ?>
                                 <input id="MAX_FILE_SIZE" type="hidden" name="MAX_FILE_SIZE" value="100000" />                          
                                 <input id="import_alter_ego_btn" class="button_class align_right" type="button" name="import_alter_ego_btn" value="Import AlterEgo" />                      
                         </form>
@@ -62,7 +49,7 @@ include 'routing.php';
                                 <input id="current_row" type="hidden" name="current_row" value="0" />
                                 <input id="products_table" type="hidden" name="table_name" value="0" />
                                 <div id="filters" class="popover_div">
-<?php generateFilters(); ?>
+                                        <?php generateFilters(); ?>
 
                                 </div>
                                 <input id="next_page_btn" class="button_class align_right"type="button" name= 'next_page_btn' value="Next Page" hidden />

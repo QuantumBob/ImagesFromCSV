@@ -8,86 +8,8 @@ function debug_to_console($data) {
         echo "<script>console.log( 'Debug Objects: " . $output . "' );</script>";
 }
 
-function getFileList() { // ***USING***
-        $target_dir = $GLOBALS['res_dir'];
-        if ($handle = opendir($target_dir)) {
-                while (FALSE !== ($entry = readdir($handle))) {
-                        if ($entry != "." && $entry != "..") {
-                                if (stripos($entry, '.csv') !== FALSE) {
-                                        $array[] = $entry;
-                                }
-                        }
-                }
-                closedir($handle);
-                foreach ($array as $file) {
-                        $html[] = "<input id='$file' class='button_class gen_btn'  type='button' name= '$file' value='$file' />";
-                }
-                echo implode(' ', $html);
-        }
-}
-
-/*
-  function doesFileExist($file_name, $upload) {
-
-  if ($upload) {
-  $target_path = $GLOBALS['res_dir'] . $file_name;
-
-  if (file_exists($target_path)) {
-  return TRUE;
-  } else {
-  return FALSE;
-  }
-  } else {
-  if (($handle = fopen("$file_name", "x")) !== FALSE) {
-  fclose($handle);
-  return TRUE;
-  } else {
-  return FALSE;
-  }
-  }
-  }
- */
-function useCSV() { // ***USING***
-        $target_path = $GLOBALS['res_dir'];
-        if (isset($_FILES['uploadedfile']) && !empty($_FILES['uploadedfile'])) {
-                $file_name = basename($_FILES['uploadedfile']['name']);
-        } else if (isset($_POST['filename']) && !empty($_POST['filename'])) {
-                $file_name = $_POST['filename'];
-        } else {
-                die();
-        }
-
-        $target_path = $target_path . $file_name;
-
-        $headers = getCSVHeaders($file_name);
-        $str = headersToHtml($headers);
-        session_start();
-        $_SESSION["filename"] = $file_name;
-
-        return $str;
-}
-
-function useCSV_OLD() { // ***USING***
-        $target_path = $GLOBALS['res_dir'];
-        if (isset($_FILES['uploadedfile']) && !empty($_FILES['uploadedfile'])) {
-                $file_name = basename($_FILES['uploadedfile']['name']);
-        } else if (isset($_POST['filename']) && !empty($_POST['filename'])) {
-                $file_name = $_POST['filename'];
-        } else {
-                die();
-        }
-
-        $target_path = $target_path . $file_name;
-
-        $headers = getCSVHeaders($file_name);
-        $str = headersToHtml($headers);
-        session_start();
-        $_SESSION["filename"] = $file_name;
-
-        return $str;
-}
-
-function uploadCSV() {// ***USING ***
+function uploadCSV() {
+        
 //    $file_name = 'alterego_current_stockline_green.csv';
 //    $target_path = $GLOBALS['res_dir'];
         $file_name = basename($_FILES['uploadedfile']['name']);
@@ -109,7 +31,8 @@ function uploadCSV() {// ***USING ***
         return $file_name;
 }
 
-function getCSVHeaders($file_name) { // ***USING***
+function getCSVHeaders($file_name) {
+        
         $resources_dir = $GLOBALS['res_dir'];
         $file_url = $resources_dir . $file_name;
 
@@ -121,16 +44,7 @@ function getCSVHeaders($file_name) { // ***USING***
         return $headers;
 }
 
-function headersToHtml($headers) { // ***USING***
-        $html_array[] = '<div class="checkbox_container">';
-        foreach ($headers as $header) {
-                $html_array[] = '<div class="input_class"><input type="checkbox" class="input_label" id="' . $header . '" name="' . (string) $header . '" value="' . (string) $header . '"><label for="' . $header . '">' . (string) $header . '</div>';
-        }
-        $html_array[] = '</div>';
-        return implode(" ", $html_array);
-}
-
-function get_group_id_base($largest_id) {
+function getGroupIDBase($largest_id) {
 
         $len = strlen($largest_id);
         $base = pow(10, $len);
@@ -138,7 +52,8 @@ function get_group_id_base($largest_id) {
         return $base;
 }
 
-function getImage($file_url, $brand, $SKU, $index) { // ***USING***
+function getImage($file_url, $brand, $SKU, $index) {
+        
         $media_dir = $GLOBALS['media_dir'];
 
         if (!is_dir($media_dir)) {
@@ -209,29 +124,6 @@ function getImage($file_url, $brand, $SKU, $index) { // ***USING***
         return "$media_dir . image_coming_soon.jpg";
 }
 
-// takes an array of https urls and combines them into one comma seperated string for woocommerce
-//function combineImageArrayIntoString($image_array){
-//    
-//    foreach($image_array as $field){
-//        $image_string = $image_string . $field;
-//    }
-//    $search = array(' ', ',');
-//    $image_string = str_replace($search, '',  $image_string);
-//    $image_string = str_replace('https', ',https', $image_string);
-//    $image_string = ltrim($image_string, ',');
-//    
-//    $temp = explode(',', $image_string);
-//    
-//    $return_array = [];
-//    foreach($temp as $url){
-//        if(!in_array($url, $return_array)){
-//            $return_array[] = $url;
-//        }
-//    }
-//    $image_string = implode(',', $return_array);
-//    return $image_string;
-//}
-
 function createImageArray($row) {
 
         if (isset($row) && !empty($row)) {
@@ -274,67 +166,8 @@ function getBaseName($name) {
         return $name;
 }
 
-/*
-  function splitSKU($sku) {
-
-  $new_sku = str_ireplace('/', '', $sku);
-
-  $resource_file = $GLOBALS['res_file'];
-  $colours = getResourceFromXML($resource_file, 'alterego_colours');
-
-  foreach ($colours as $colour) {
-  $index = stripos($new_sku, $colour);
-  if ($index !== FALSE) {
-  $split_sku[] = substr($new_sku, 0, $index);
-  $split_sku[] = $colour;
-  $split_sku[] = substr($new_sku, $index + strlen($colour));
-  return $split_sku;
-  }
-  }
-
-  $sizes = getResourceFromXML($resource_file, 'alterego_sizes');
-
-  foreach ($sizes as $size) {
-  $index = stripos($new_sku, $size);
-  if ($index !== FALSE) {
-  $split_sku[] = substr($new_sku, 0, $index);
-  $split_sku[] = 'no colour';
-  $split_sku[] = $size;
-  return $split_sku;
-  }
-  }
-  return FALSE;
-  }
- */
-function getBaseSKU($sku) { // ***USING***
-        $resource_file = $GLOBALS['res_file'];
-        $colours = getResourceFromXML($resource_file, 'alterego_colours');
-
-        foreach ($colours as $colour) {
-                $index = stripos($sku, $colour);
-                if ($index !== FALSE) {
-                        return substr($sku, 0, $index);
-                }
-        }
-
-        $sizes = getResourceFromXML($resource_file, 'alterego_sizes');
-
-        foreach ($sizes as $size) {
-                $index = stripos($sku, $size);
-                if ($index !== FALSE) {
-                        return substr($sku, 0, $index);
-                }
-        }
-        //try with first 8 characters to build sku
-        return substr($sku, 0, 8);
-}
-
 function generateParentSKU($SKU) {
-        // remove ()/ and replace with _
-        // convert to all upper case
-        // remove colour from end of string
-//    $SKU = mb_strtolower($SKU, 'UTF-8');
-
+       
         $SKU = str_replace('?', '_', $SKU);
         $SKU = str_replace('(', '_', $SKU);
         $SKU = str_replace(')', '_', $SKU);
@@ -345,7 +178,7 @@ function generateParentSKU($SKU) {
         $SKU = str_replace('__', '_', $SKU);
 
         if (stripos($SKU, "fleur") > 0) {
-                $SKU = remove_accents($SKU);
+                $SKU = removeAccents($SKU);
         }
 
 //    $b = array("á", "é", "í", "ó", "ú", "n");
@@ -359,7 +192,7 @@ function generateParentSKU($SKU) {
         return $SKU;
 }
 
-function remove_accents($str, $utf8 = true) {
+function removeAccents($str, $utf8 = true) {
         $str = (string) $str;
         if (is_null($utf8)) {
                 if (!function_exists('mb_detect_encoding')) {
@@ -494,29 +327,8 @@ function remove_accents($str, $utf8 = true) {
         return $str;
 }
 
-function spaces_to_underscore($array, $change_keys = FALSE) {
-
-        if ($change_keys) {
-                foreach ($array as $key => $value) {
-                        $key = str_replace('?', '', $key);
-                        $key = str_replace('(', '', $key);
-                        $key = str_replace(')', '', $key);
-                        $key = str_replace('-', '_', $key);
-                        $new_array[str_replace(' ', '_', $key)] = $value;
-                }
-        } else {
-                foreach ($array as $key => $value) {
-                        $value = str_replace('?', '', $value);
-                        $value = str_replace('(', '', $value);
-                        $value = str_replace(')', '', $value);
-                        $key = str_replace('-', '_', $key);
-                        $array[$key] = str_replace(' ', '_', $value);
-                }
-        }
-        return $new_array;
-}
-
-function showProducts($start_row, $items_per_page, $filters = FALSE) { // ***USING***
+function showProducts($start_row, $items_per_page, $filters = FALSE) {
+        
         if ($start_row < 0) {
                 $start_row = 0;
         }
@@ -529,16 +341,17 @@ function showProducts($start_row, $items_per_page, $filters = FALSE) { // ***USI
 
 //        $data = getProductData($conn, $table_name, $start_row, $items_per_page, $filters);
         $data = getGroupedProductData($conn, $table_name, $start_row, $items_per_page, $filters);
-        $html = product_data_to_html($data);
+        $html = productDataToHtml($data);
 
         return implode(' ', $html);
 }
 
-function product_data_to_html($data) { // ***USING***
+function productDataToHtml($data) {
+
         $html_array[] = '<div id="product_data" class="base-layer">';
 
         foreach ($data as $group) {
-                
+
                 $group_id = $group['group_id'];
 
                 $html_array[] = '<div class="product_box">';
@@ -625,84 +438,9 @@ function product_data_to_html($data) { // ***USING***
         return $html_array;
 }
 
-/*
-  function product_data_to_html_OLD2($data) {
-  $html_array[] = '<div id=\'product_data\' class="base-layer">';
-  foreach ($data as $array) {
-  $keys = array_keys($array);
-  $count = count($array);
-  $first_variant = $array[$keys[0]];
-  $first_id = $array[$keys[0]]['Product_ID'];
-  $html_array[] = '<div class="product_box">';
-  $html_array[] = '<div class="left-box">';
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<div id="carousel_' . $first_id . '" class="carousel">';
-  $html_array[] = '<input id="left_btn_' . $first_id . '" type="button" value="<" class="left-button image-slide-btn" name="left_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="left"/>';
-  $html_array[] = '<input id="right_btn_' . $first_id . '" type="button" value=">" class="right-button image-slide-btn" name="right_btn_' . $first_id . '" data-id="' . $first_id . '" data-direction="right"/>';
-  $html_array[] = '<ul data-count="' . $count . '">';
-  if ($count === 0) {
-  //use 'image coming soon placeholder
-  $no_image = './image_coming_soon.jpg';
-  $html_array[] = '<li><img id="image_none" class="image" src="' . $no_image . '" style="margin-left:250;"></li>';
-  } else {
-  foreach ($array as $variant) {
-  $html_array[] = '<li><img id="image_' . $variant['Product_ID'] . '" class="image" src="' . $variant['Image'] . '"></li>';
-  }
-  }
-  $html_array[] = '</ul>';
-  $html_array[] = '</div>'; // carousel
-  $html_array[] = '</div>'; //table-row
-  $html_array[] = '</div>'; // left-box
-  $html_array[] = '<div class="right-box">';
-  $html_array[] = '<div class="table-row">';
-  foreach ($array as $variant) {
-  $html_array[] = '<div class="info-box">';
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<span class="left-span">Name : <label id="name_' . $variant['Product_ID'] . '">' . $variant['Name'] . '</label></span>';
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<span class="left-span">Price : £<label id="price_' . $variant['Product_ID'] . '">' . $variant['Price_RRP'] . '</label></span>';
-  $html_array[] = '<span class="left-span">Trade Price : £<label id="trade_price_' . $variant['Product_ID'] . '">' . $variant['Trade_Price'] . '</label></span>';
-  if ($array[$keys[0]]['Selling'] == TRUE) {
-  $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $variant['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $variant['Product_ID'] . '" checked></span>';
-  } else {
-  $html_array[] = '<span class="left-span">Selling : <input id="selling_' . $variant['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $variant['Product_ID'] . '"></span>';
-  }
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<span class="left-span">Product ID : <label id="product_id_' . $variant['Product_ID'] . '">' . $variant['Product_ID'] . '</label></span>';
-  $html_array[] = '<span class="left-span">SKU : <label id="sku_' . $variant['Product_ID'] . '">' . $variant['SKU'] . '</label></span>';
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<span class="left-span">Variations</span>';
-  $html_array[] = '<span class="left-span">Size : <label id="size_' . $variant['Product_ID'] . '">' . $variant['Size'] . '</label></span>';
-  $html_array[] = '<span class="left-span">Colour : <label id="colour_' . $variant['Product_ID'] . '">' . $variant['Colour'] . '</label></span>';
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '</div>'; //info-box
-  }
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '<div class="table-row">';
-  $html_array[] = '<p class="left-span"><label id="description_' . $first_id . '">' . $first_variant['Description'] . '</label></p>';
-  $html_array[] = '</div>'; // table-row
-  $html_array[] = '</div>'; // right-box
-  $html_array[] = '</div>'; // product-box
-  }
-  $html_array[] = '</div>'; // base-layer
-  return $html_array;
-  }
- */
-function updateSelling() { // ***USING***
-        if (!isset($_SESSION)) {
-                session_start();
-        }
-        $table_name = $_SESSION['table_name'];
-        $selling_list = $_POST['selling'];
-
-        $conn = openDB('rwk_productchooserdb');
-        updateSellingDB($conn, $table_name, $selling_list);
-}
-
 function exportToCSV($wholesaler) {
+
+        // at export we have to download all the remaining images from web
 
         $ini_val = ini_get('upload_tmp_dir');
         $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
@@ -716,8 +454,8 @@ function exportToCSV($wholesaler) {
         $file_url = $temp_path . '/' . $table_name . '.csv';
 
         $row = 0;
-        $max_id = get_largest_id($table_name);
-        $group_id_base = get_group_id_base($max_id);
+        $max_id = getLargestID($table_name);
+        $group_id_base = getGroupIDBase($max_id);
 
         if (($handle = fopen("$file_url", "w")) !== FALSE) {
 
@@ -726,11 +464,10 @@ function exportToCSV($wholesaler) {
                 $result = fputcsv($handle, $woo_headers);
 
                 $groups = getGroups($conn, $table_name);
-                foreach ($groups as $group => $value) {
-//            $result = getProductsBySKU($group, $table_name);
-                        $result = getProductsByProductCode($group, $table_name);
+                foreach ($groups as $parent => $value) {
+                        $result = getProductsByID($conn, $table_name, $value);
                         if (!empty($result)) {
-                                $groupArray = createGroup($result, $wholesaler, $group);
+                                $groupArray = createGroup($result, $wholesaler, $parent);
                                 foreach ($groupArray as $product) {
                                         fputcsv($handle, $product);
                                 }
@@ -739,30 +476,12 @@ function exportToCSV($wholesaler) {
         }
 
         fclose($handle);
+        $conn->close();
+
         return TRUE;
 }
 
-function exportToWP() {
-
-        $ini_val = ini_get('upload_tmp_dir');
-        $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
-        if (!isset($_SESSION)) {
-                session_start();
-        }
-        $table_name = $_SESSION['table_name'];
-
-        $conn = openDB('rwk_productchooserdb');
-
-        $sql = "CREATE TABLE  rwk_seduce.alterego SELECT * FROM rwk_productchooserdb.alterego_first_35";
-        $results = $conn->query($sql);
-        if ($results === FALSE) {
-                return array("mysqli_error" => $conn->error);
-        } else {
-                return TRUE;
-        }
-}
-
-function createGroup($result, $wholesaler, $group) {
+function createGroup($result, $wholesaler, $parent) {
 
         $map = getResourceFromXML($GLOBALS['res_file'], $wholesaler . '_map', "map", TRUE);
         $group_added = FALSE;
@@ -807,7 +526,7 @@ function createGroup($result, $wholesaler, $group) {
         $new_array[0]['Allow customer reviews?'] = '0';
         $new_array[0]['Position'] = '0';
         $new_array[0]['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($result[0]['Image'], '.');
-        $new_array[0]['SKU'] = $group;
+        $new_array[0]['SKU'] = $parent;
 
         for ($i = 1; $i <= $num_products; $i++) {
                 $new_array[$i]['Type'] = 'variation';
@@ -820,13 +539,13 @@ function createGroup($result, $wholesaler, $group) {
                 $new_array[$i]['Position'] = '0';
                 $new_array[$i]['Images'] = 'http://localhost/ImagesFromCSV' . ltrim($result[$i - 1]['Image'], '.');
                 $new_array[$i]['SKU'] = str_replace('/', '', $new_array[$i]['SKU']);
-                $new_array[$i]['Parent'] = $group;
+                $new_array[$i]['Parent'] = $parent;
         }
 
         return $new_array;
 }
 
-function generateFilters() { // ***USING***
+function generateFilters() {
         $html_array[] = 'All : <input id="all" name="all" value="All" class="filter_type" type="checkbox" checked>';
 
         $html_array[] = 'Stock Green : <input name="stock_green" value="Stock_Level=green" class="filter_type" type="checkbox" unchecked>';
@@ -844,162 +563,15 @@ function generateFilters() { // ***USING***
         $html_array[] = 'Brand Bassaya : <input name="brand" value="Brand=Bassaya" class="filter_type" type="checkbox" unchecked>';
 
         echo implode(' ', $html_array);
-}
-
-function generateFiltersOLD() { // ***USING***
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'All : <input id="all" name="all" value="All" class="filter_type" type="checkbox" checked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Stock Green : <input name="stock_green" value="Stock_Level=green" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Stock Amber : <input name="stock_amber" value="Stock_Level=amber" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Stock Red : <input name="stock_red" value="Stock_Level=red" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Discontinued : <input name="stock_discontinued" value="Stock_Type =Discontinued" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Pre Order : <input name="stock_pre_order" value="Stock_Type=Pre-Order Continuity" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Stock Line : <input name="stock_line" value="Stock_Type=Stock Line" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-        $html_array[] = '<div class="popover__wrapper">';
-        $html_array[] = 'Brand Bassaya : <input name="brand" value="Brand=Bassaya" class="filter_type" type="checkbox" unchecked>';
-        $html_array[] = '<div class="popover__content"><p class="popover__message">Stock Lines are available all year round – this is the majority of our products.</p></div></div>';
-
-        echo implode(' ', $html_array);
-}
-
-function create_progress() {
-        // First create our basic CSS that will control
-        // the look of this bar:
-        echo "
-<style>
-#progress_text {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  margin: 0px 0px 0px -150px;
-  font-size: 18px;
-  text-align: center;
-  width: 300px;
-}
-  #progress_barbox_a {
-  position: absolute;
-  top: 130px;
-  left: 50%;
-  margin: 0px 0px 0px -160px;
-  width: 304px;
-  height: 24px;
-  background-color: black;
-}
-.per {
-  position: absolute;
-  top: 130px;
-  font-size: 18px;
-  left: 50%;
-  margin: 1px 0px 0px 150px;
-  background-color: #FFFFFF;
-}
-
-.bar {
-  position: absolute;
-  top: 132px;
-  left: 50%;
-  margin: 0px 0px 0px -158px;
-  width: 0px;
-  height: 20px;
-  background-color: #0099FF;
-}
-
-.blank {
-  background-color: white;
-  width: 300px;
-}
-</style>
-";
-
-        // Now output the basic, initial, XHTML that
-        // will be overwritten later:
-        echo "
-<div id='progress_text'>Script Progress</div>
-<div id='progress_barbox_a'></div>
-<div class='bar blank'></div>
-<div class='per'>0%</div>
-";
-
-        // Ensure that this gets to the screen
-        // immediately:
-        flush();
-}
-
-// A function that you can pass a percentage as
-// a whole number and it will generate the
-// appropriate new div's to overlay the
-// current ones:
-
-function update_progress($percent) {
-        // First let's recreate the percent with
-        // the new one:
-        echo "<div class='per'>{$percent}
-    %</div>\n";
-
-        // Now, output a new 'bar', forcing its width
-        // to 3 times the percent, since we have
-        // defined the percent bar to be at
-        // 300 pixels wide.
-        echo "<div class='bar' style='width: ",
-        $percent * 3, "px'></div>\n";
-
-        // Now, again, force this to be
-        // immediately displayed:
-        flush();
-}
-
-function compareFiles($file_a, $file_b) {
-
-        if (filesize($file_a) == filesize($file_b)) {
-                $fp_a = fopen($file_a, 'rb');
-                $fp_b = fopen($file_b, 'rb');
-
-                while (($bytes_a = fread($fp_a, 4096)) !== false) {
-                        $bytes_b = fread($fp_b, 4096);
-                        if ($bytes_a !== $bytes_b) {
-                                fclose($fp_a);
-                                fclose($fp_b);
-                                return false;
-                        }
-                }
-
-                fclose($fp_a);
-                fclose($fp_b);
-
-                return true;
-        }
-
-        return false;
 }
 
 function splitCats($input) {
 
         $cat_array = [];
-//        $search = array(' ', ';');
-//        $replace = ',';
-//
-//        $result = str_replace($search, $replace, $input);
-//        $result_array = explode(',', $result);
-
         $result_array = explode(',', $input);
 
-//        $transliteration = array('babydolls' => 'babydoll', 'dresses' => 'dress', );
         foreach ($result_array as $cat) {
-                //maybe too complicated!
-//                $cat = str_replace(array_keys($transliteration), array_values($transliteration), strtolower($cat));
+
                 $cat = str_replace('&', 'and', $cat);
                 if (strtolower($cat) !== 'dress') {
                         $cat = ucfirst(rtrim($cat, 's'));

@@ -103,7 +103,6 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         $_SESSION['table_name'] = $_POST['table_name'];
                         $html = showProducts($start_row, $items_per_page, $filters);
 
-//            $start_row = $_POST['current_row'];
                         $return = array('row' => $start_row, 'html' => $html);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
@@ -111,27 +110,17 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         break;
 
                 case 'nextPage' :
-//            getNextPage();
                         $items_per_page = $_POST['ipp'];
                         $start_row = $_POST['current_row'] + $items_per_page;
                         $filters = explode(',', $_POST['filter']);
-//            $selling_list = json_decode($_POST['selling'], true);
-//            updateSelling($selling_list);
 
                         $html = showProducts($start_row, $items_per_page, $filters);
-
-//            if (!isset($_SESSION)) {
-//                session_start();
-//                $_SESSION['current_row'] = (string) $start_row;
-//            }
-
                         $return = array('row' => $start_row, 'html' => $html);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
                         echo $json;
                         break;
 
                 case 'previousPage' :
-//            getPreviousPage();
                         $items_per_page = $_POST['ipp'];
                         $start_row = $_POST['current_row'] - $items_per_page;
                         $filters = explode(',', $_POST['filter']);
@@ -143,13 +132,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         echo $json;
                         break;
 
-                case 'updateSelling' : // ***USING***
+                case 'updateSelling' : 
                         updateSelling();
                         break;
 
                 case 'exportCSV' :
                         exportToCSV('alterego');
-//            exportToWP();
                         break;
         }
 }
