@@ -1,5 +1,46 @@
 /* IDs */
 
+#items_per_page{
+        margin-right: 5px;
+        margin-top: 5px;
+}
+
+#brands{
+        margin-right: 20px;
+}
+
+#tables_div{
+        display: inline-block;
+}
+
+/* Classes */
+
+.wait{
+        border-radius: 50%;
+        border: 25px solid green;
+        display: none;
+        width: 200px;
+        height: 200px;        
+        background-color: white;
+        /* position of tooltip */
+        position: absolute;
+        z-index: 3;
+        top: 10%;
+        left: 9%;
+}
+
+.wait_text{
+        color: black;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        font-size: 3em;
+        font-weight: bolder;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%); 
+}
+
 .file_form_div{
         border : 1px solid #000;
         margin-right: 15px;
@@ -19,16 +60,6 @@
         opacity: 0;
 }
 
-#items_per_page{
-        margin-right: 5px;
-        margin-top: 5px;
-}
-
-#brands{
-        margin-right: 20px;
-}
-
-/* Classes */
 .input_label + label{
         margin-left: 5px;
         font-family: sans-serif;
@@ -38,12 +69,17 @@
         float: right;
 }
 
-.spacer-left{
+.spacer_left{
         margin-left: 50px;
 }
 
-.spacer-right{
+.spacer_right{
         margin-right: 50px;
+}
+
+.brands_label{
+        float: right;
+        margin-right: 10px;
 }
 
 .button_class{
@@ -53,23 +89,11 @@
         /*box-shadow: 15px 15px 10px #0f834d;*/
 }
 
-.input_class{
-        border: 1px solid black;
-        padding: 5px;
-        margin: 2px;
-        background-color:  #ffc8be;
-        border-radius: 6px;
-        width: 20%;
-}
-
-.checkbox_container{
+div.base_layer {
+        /*flex*/
         display: flex;
         flex-direction: column;
-        flex-wrap: wrap;
-        height: 700px;
-}
-
-div.base-layer {
+        /*other*/
         background: none #ffc8be;
         border: solid #333333 1px;
         color: #000000;
@@ -77,33 +101,66 @@ div.base-layer {
         padding: 0;
         text-align: center;
         width: 98%;
-        overflow: hidden;
-        /*display: table;*/
+        overflow: hidden;  
         border-collapse:collapse;
         position: relative;
 }
 
 div.product_box{
-        border-bottom: solid #333333 1px;
+        /*flex*/
+        display: flex;
+        flex-direction: row;
+        /*other*/
         clear: both;
         overflow: hidden;
+        border: 1px lightgray solid;
 }
 
-div.left-box{
-        width:22.5%;
-        float: left;
-        /*overflow: hidden;*/
+div.left_box{
+        /* flex as parent */
+        display: flex;
+        flex-direction: column;
+        /*flex as child*/
+        order: 1;
+        /*other*/
+        /*        width:22.5%;
+                float: left;*/
+
 }
 
-div.right-box{
-        width: 65%;
-        float: right;
-        overflow: hidden;
+div.right_box{
+        /* flex as parent */
+        display: flex;
+        flex-direction: column;
+        /*flex as child*/
+        order: 2;
+        /*other*/
+        /*background: none #ffffcc;*/
 }
 
-div.table-row{
-        background: none #ffffcc;
-        border: solid #000000 1px;
+div.group_box{
+        /*flex*/
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+}
+
+div.info_box{
+        /* flex */
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        /*other */
+        border: 1px solid violet;
+        margin: 1px;
+}
+
+div.table_row{
+        /* flex */
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        /* other */
         color: #000000;
         margin-top: 5px;
         margin-right: 5px;
@@ -112,70 +169,51 @@ div.table-row{
         padding: 5px;
         text-align: left;
         width: auto;
-        overflow: hidden;
-        clear: left;
 }
 
-div.info-box{
-        /*    background: none #ffffcc;
-            border: solid #000000 1px;
-            color: #000000;
-            margin-top: 5px;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            margin-left: 5px;
-            padding: 5px;
-            text-align: left;
-        */ width: 80%; /*! overflow: hidden; */
-        float: left;
-
+div.table_row label{
+        background: #ffffcc;
+        border:  solid  grey 1px;
+        padding: 8px 10px;
 }
 
-span.left-span, li.left-span{
-        border:  solid grey 1px;
+div.one_third{
+        flex-basis: 30%;
+}
+
+div.two_thirds{
+        flex-basis: 65%;
+}
+
+div.half{
+        flex-basis: 49%;
+}
+
+span.simple_span{
+        flex-grow: 1;
+        margin: 1px 5px;
+        border:  dashed grey 1px;
         padding-left: 5px;
         padding-right: 5px;
 }
 
-div.centre-span{
-
-}
-
-div.right-span{
-
-}
-
-img.icon{
-        width: 25px;
-        margin-left: 10px;
-        margin-top: -20px;
-        border: 0;
-}
-
-img.image{
-        /*do not change 
-        display:block;
-        width: 100%;*/
-}
-
-.image_box {
-        width: 250px;
-        overflow: hidden;
-        border: solid 1px black;
-        position: relative;
-}
-
-.image_box img {
-        width: 250px;
-        text-align: center;
-        list-style: none;
-        float: left;
+div.info_item{
+        /*flex*/
+        flex-grow: 1;
+        /*other*/
+        background: #ffffcc;
+        margin-top: 0px;
+        margin-bottom: 3px;
+        margin-left: 0px;
+        margin-right: 10px;
+        border:  solid  grey 1px;
+        padding: 8px 10px;
 }
 
 .carousel {
         width: 250px;
         overflow: hidden;
-        border: solid 1px black;
+        /*border: solid 1px black;*/
         position: relative;
 }
 
@@ -208,7 +246,7 @@ img.image{
         margin: auto 0;
         width: 25%;
         height: 100%;  
-        border: dashed 1px black;
+        border: dashed 0px black;
         outline: none;
         color: black;
         background: transparent; /*url(images/blank.gif);*/
@@ -218,72 +256,62 @@ img.image{
 }
 
 .carousel input[type="button"]:hover{
-        opacity: 0.5;
+        opacity: 0.75;
 }
 
-.left-button {
+.left_button {
         left: 0;
 }
 
-.right-button {
+.right_button {
         right: 0;
 }
 
-.popover_wrapper {
-        /*border:  solid grey 1px;*/
-        /*position: relative;*/
-        display: inline-block;
-        list-style-type: none;
-        margin: 0px;
-        padding: 0px;
-}
-
-.popover_content {
-        opacity: 0;
-        visibility: hidden;
-        position: absolute;
-/*        left: calc(50% - 10px);
-        top: calc(5%);*/
-        /*transform: translate(0,10px);*/
-        background-color: #BFBFBF;
-        padding: 1.5rem;
-        box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
-        width: 400px;
-}
-
-/*.popover_content:before {
-
-        z-index: -1;
-        content: '';
-        right: calc(50% - 10px);
-        top: -8px;
-        border-style: solid;
-        border-width: 0 10px 10px 10px;
-        border-color: transparent transparent #BFBFBF transparent;
-        transition-duration: 0.3s;
-        transition-property: transform;
-}*/
-
-.popover_wrapper:hover .popover_content {
+.tooltip_target{
         position: relative;
-        z-index: 10;
-        opacity: 1;
+        /*display: inline-block;*/
+}
+
+.tooltip_target .tooltip_text{
+        border: 2px solid black;
+        visibility: hidden;
+        width: 160%;
+
+        background-color: black;
+        color: #fff;
+        border-radius:  6px;
+        padding: 0px 0px;
+
+        /* position of tooltip */
+        position: absolute;
+        z-index: 1;
+        top: 170%;
+        left: -40%;
+}
+
+.tooltip_target .tooltip_text::after{
+        /* this is the arrow*/
+        content: " ";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        margin-left:  -10px;
+        border-width: 10px;
+        border-style: solid;
+        border-color: transparent transparent black transparent;
+}
+
+.tooltip_target:hover .tooltip_text{
+        border: 2px solid black;
         visibility: visible;
-/*        transform: translate(0, 0px);
-        transition: all 0.5s cubic-bezier(0.75, -0.02, 0.2, 0.97);*/
 }
 
-.popover_message {
-        font-size: medium;
-        text-align: left;
-        overflow: visible;
+label.fakebutton{
+        box-shadow: 2px 2px 2px #7d7d7d;
 }
 
-.no_border{
-        border: 1px solid white;
-}
-h1 .popover_content{
-        top: 50px;
-        left: -410px;
-        width: 400px;
+input[type="checkbox"]{
+        margin-right: 0px;
+        margin-left: 0px;
+        margin-bottom: 8px;
 }

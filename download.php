@@ -6,14 +6,12 @@ if (!isset($_SESSION)) {
         session_start();
 }
 $table_name = $_SESSION['table_name'];
-//$table_name = $_POST['table_name'];
 $file_url = $temp_path . '/' . $table_name . '.csv';
 $size = filesize($file_url);
 
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename="' . $table_name . '.csv"');
-//header('Content-Disposition: attachment; filename="alterego_test.csv"');
+header('Content-Disposition: attachment; filename="woo_ready_' . $table_name . '.csv"');
 header('Content-Transfer-Encoding: binary');
 header('Expires: 0');
 header('Cache-Control: must-revalidate');

@@ -16,7 +16,7 @@ $GLOBALS['media_dir'] = './media/';
 //$GLOBALS['num_rows'] = 5;
 
 if (isset($_POST['action']) && !empty($_POST['action'])) {
-
+        
         $action = $_POST['action'];
         switch ($action) {
                 case 'checkUploadFile' :
@@ -81,12 +81,12 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         createBrandsTable($conn, $file_name);
                         reformatMainTable($conn, $file_name);
 
-                        $start_row = $_POST['current_row'];
+                         $start_row = $_POST['current_row'];
                         $items_per_page = $_POST['ipp'];
-                        $filters = explode(',', $_POST['filter']);
+                        $filters = explode(',', $_POST['filter']);                      
                         $html = showProducts($start_row, $items_per_page, $filters);
                         $filters = appendFilters();
-
+                        
                         $return = array('row' => $start_row, 'html' => $html, 'filters' => $filters);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
 
@@ -110,7 +110,7 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
 
                         $return = array('row' => $start_row, 'html' => $html, 'filters' => $filters);
                         $json = json_encode($return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS);
-
+                        $error = json_last_error();
                         echo $json;
                         break;
 
@@ -145,5 +145,6 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         exportToCSV('alterego');
                         break;
         }
+        
 }
 

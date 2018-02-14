@@ -52,17 +52,20 @@ function getTables() {
         $result = $conn->query("SELECT table_name FROM information_schema.tables where table_schema='rwk_productchooserdb'");
 
         $html = array();
+        
+        $html[] = '<div id="tables">';
         foreach ($result as $table) {
                 if (stripos($table['table_name'], '_groups') === FALSE && stripos($table['table_name'], '_map') === FALSE && stripos($table['table_name'], '_brands') === FALSE && stripos($table['table_name'], '_categories') === FALSE) {
                         $html[] = "<input id='{$table['table_name']}' class='button_class gen_table_btn'  type='button' name= '{$table['table_name']}' value='{$table['table_name']}' />";
                 }
         }
+        $html[] = '</div>';
         echo implode(' ', $html);
 }
 
 function getProductsByID($conn, $table_name, $IDs) {
 
-        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$IDs})");
+        $result = $conn->query("SELECT * FROM {$table_name} WHERE Product_ID IN ({$IDs}) AND Selling = TRUE");
 
         return $result->fetch_all(MYSQLI_ASSOC);
 }
@@ -102,6 +105,7 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
         $sql = "SELECT Group_ID, Product_IDs FROM {$table_name}_groups";
         $sql .= " LIMIT {$start_row}, 1000000";
         $group_results = $conn->query($sql);
+        $array = [];
 
         if ($group_results !== FALSE) {
                 $start_group = 0;
@@ -133,11 +137,11 @@ function getGroupedProductData($conn, $table_name, $start_row, $items_per_page, 
                                 }
                                 $sql .= " AND ";
                                 foreach ($filter_groups as $key => $filter) {
-                                        if ($key === 'Brand' && $filter === 'All'){
+                                        if ($key === 'Brand' && $filter === 'All') {
                                                 continue;
                                         }
-                                         if ($key === 'Category'){
-                                                $sql .= "INSTR('{$key}', '{$filter}') > 0";
+                                        if ($key === 'Categories') {
+                                                $sql .= "{$key} LIKE  '%{$filter}%'";
                                                 continue;
                                         }
                                         $sql .= "{$key} IN ('{$filter}')";
@@ -246,32 +250,14 @@ function bulkFillTable($conn, $file_name) {
 
         $table = str_replace(".csv", "", $file_name);
 
-        $_SESSION['table_name'] = $table;
-
-        $sql = "DROP TABLE IF EXISTS {$table}";
-        if ($conn->query($sql) === FALSE) {
-                return array("mysqli_error" => $conn->error);
-        }
-
         $fields_array = getCSVHeaders($file_name);
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
-        $type = 'VARCHAR(255)';
-
-        foreach ($fields_array as $field) {
-                $field = str_replace(' ', '_', $field);
-                $field = str_replace('(', '', $field);
-                $field = str_replace(')', '', $field);
-                $field = str_replace(',', '', $field);
-                $sql .= $field . "  " . $type . ",";
+        if (!isset($_SESSION)) {
+                session_start();
         }
+        $_SESSION['table_name'] = $table;
 
-        $sql = rtrim($sql, ',');
-        $sql .= ")";
-
-        if ($conn->query($sql) !== TRUE) {
-                return array("mysqli_error" => $conn->error);
-        }
+        $last_field = createMainTable($conn, $table, $fields_array);
 
         $file_name = "C:/wamp64/www/ImagesFromCSV/resources/" . $file_name;
         // get number of rows in file
@@ -280,8 +266,8 @@ function bulkFillTable($conn, $file_name) {
         $num_rows_in_file = $file->key() + 1;
 
         $sql = "SELECT COUNT(*) FROM {$table}";
-        if ($field != NULL) {
-                $sql .= " GROUP BY {$field}";
+        if ($last_field != NULL) {
+                $sql .= " GROUP BY {$last_field}";
         }
         $result = $conn->query($sql);
         if ($result === FALSE) {
@@ -313,6 +299,34 @@ function bulkFillTable($conn, $file_name) {
         }
 }
 
+function createMainTable($conn, $table, $fields_array) {
+
+        $sql = "DROP TABLE IF EXISTS {$table}";
+        if ($conn->query($sql) === FALSE) {
+                return array("mysqli_error" => $conn->error);
+        }
+
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
+        $type = 'VARCHAR(512)';
+
+        foreach ($fields_array as $field) {
+                $field = str_replace(' ', '_', $field);
+                $field = str_replace('(', '', $field);
+                $field = str_replace(')', '', $field);
+                $field = str_replace(',', '', $field);
+                $sql .= $field . "  " . $type . ",";
+        }
+
+        $sql = rtrim($sql, ',');
+        $sql .= ")";
+
+        if ($conn->query($sql) !== TRUE) {
+                return array("mysqli_error" => $conn->error);
+        } else {
+                return $field;
+        }
+}
+
 function createGroupsTable($conn, $file_name) {
 
         $table = str_replace(".csv", "_groups", $file_name);
@@ -322,7 +336,7 @@ function createGroupsTable($conn, $file_name) {
                 return array("mysqli_error" => $conn->error);
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Parent VARCHAR(255), Product_IDs VARCHAR(255), Image VARCHAR(255))";
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (Group_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Parent VARCHAR(255), Product_IDs VARCHAR(2048), Image VARCHAR(2048))";
 
         if ($conn->query($sql) === TRUE) {
                 return TRUE;
@@ -402,7 +416,8 @@ function reformatMainTable($conn, $file_name) {
                                 $array = splitCats($row['Categories']);
                                 foreach ($array as $cat) {
                                         $cat = "'$cat'";
-                                        if (!in_array("({$cat})", $categories_array)) {
+//                                        if (!in_array("({$cat})", $categories_array)) {
+                                        if (!in_array("({$cat})", $categories_array) && !in_array("({$cat})", $brands_array)) {
                                                 $categories_array[] = "({$cat})";
                                         }
                                 }
@@ -441,7 +456,7 @@ function reformatMainTable($conn, $file_name) {
 
                 $cats_table = $table . "_categories";
                 $values = implode(',', $categories_array);
-                $sql = "INSERT INTO {$cats_table} (Category) VALUES {$values}";
+                $sql = "INSERT IGNORE INTO {$cats_table} (Category) VALUES {$values}";
                 $sql_result = $conn->query($sql);
 
                 if ($sql_result !== TRUE) {
@@ -460,7 +475,7 @@ function reformatMainTable($conn, $file_name) {
 //                $sql = "UPDATE {$table} INNER JOIN {$group_table} ON {$table}.Product_ID = {$group_table}.Product_ID SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE";
 //                $sql = "UPDATE {$table} INNER JOIN {$group_table} SET {$table}.Parent = {$group_table}.Parent, {$table}.Image = {$group_table}.Image, {$table}.Selling = TRUE WHERE {$table}.Product_ID IN {$group_table}.Product_IDs";
 
-                $sql = "UPDATE {$table} SET Selling = TRUE";
+                $sql = "UPDATE {$table} SET Selling = FALSE";
 
 //                $sql = "SELECT  {$group_table}.Parent, {$group_table}.Image FROM {$group_table} INNER JOIN {$table} WHERE {$table}.Product_ID IN {$group_table}.Product_IDs";
 
