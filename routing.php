@@ -75,12 +75,10 @@ if (isset($_POST['action']) && !empty($_POST['action'])) {
                         }
                         $file_name = importCSV();
                         $conn = openDB('rwk_productchooserdb');
+                        
+                        updateTables($conn, $file_name);
                         bulkFillTable($conn, $file_name);
-                        createGroupsTable($conn, $file_name);
-                        createCategoriesTable($conn, $file_name);
-                        createBrandsTable($conn, $file_name);
-                        reformatMainTable($conn, $file_name);
-
+                        
                          $start_row = $_POST['current_row'];
                         $items_per_page = $_POST['ipp'];
                         $filters = explode(',', $_POST['filter']);                      

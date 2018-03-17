@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <?php
-session_start();
+
+session_start ();
 include 'routing.php';
 //
+
 ?>
 <html>
         <head>
                 <meta charset="UTF-8">
                 <link rel="stylesheet" type="text/css" href="styles.css" />
-                <script src="jquery-3.2.1.js"></script>
+                <script src="jquery-3.2.1.min.js"></script>
                 <script src="scripts.js"></script>
                 <title></title>
         </head>
@@ -25,9 +27,10 @@ include 'routing.php';
                                         <form id="upload_file" class="file_form" name="upload_file" enctype="multipart/form-data" method="POST" action="uploadCSV">                                      
                                                 <label for="uploadedfile"  class="fakebutton">Choose a CSV file to upload</label>
                                                 <input id="uploadedfile"name="uploadedfile" type="file"  />
-                                                <label id="upload_file_name">No File Selected</label>                                                  <input id="MAX_FILE_SIZE" type="hidden" name="MAX_FILE_SIZE" value="100000" />          
+                                                <label id="upload_file_name">No File Selected</label> 
+                                                <input id="MAX_FILE_SIZE" type="hidden" name="MAX_FILE_SIZE" value="100000" />          
                                                 <div id="tables_div">
-                                                        <?php getTables(); ?>
+                                                        <?php getTables (); ?>
                                                 </div>
                                                 <input id="import_alter_ego_btn" class="button_class align_right" type="button" name="import_alter_ego_btn" value="Import AlterEgo" />                      
                                         </form>
