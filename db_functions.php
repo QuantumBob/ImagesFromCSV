@@ -70,7 +70,7 @@ function getTables () {
 
         $html[] = '<div id="tables">';
         foreach ( $result as $table ) {
-                if ( stripos ( $table[ 'table_name' ], '_groups' ) === FALSE && stripos ( $table[ 'table_name' ], '_map' ) === FALSE && stripos ( $table[ 'table_name' ], '_brands' ) === FALSE && stripos ( $table[ 'table_name' ], '_categories' ) === FALSE && stripos ( $table[ 'table_name' ], '_extra' ) === FALSE ) {
+                if ( stripos ( $table[ 'table_name' ], '_groups' ) === FALSE && stripos ( $table[ 'table_name' ], '_map' ) === FALSE && stripos ( $table[ 'table_name' ], '_brands' ) === FALSE && stripos ( $table[ 'table_name' ], '_categories' ) === FALSE && stripos ( $table[ 'table_name' ], '_extra' ) === FALSE && stripos ( $table[ 'table_name' ], '_images' ) === FALSE ) {
                         $html[] = "<input id='{$table[ 'table_name' ]}' class='button_class gen_table_btn'  type='button' name= '{$table[ 'table_name' ]}' value='{$table[ 'table_name' ]}' />";
                 }
         }
