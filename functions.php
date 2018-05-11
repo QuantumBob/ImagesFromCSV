@@ -1,24 +1,24 @@
 <?php
 
-function debug_to_console($data) {
+function debug_to_console ( $data ) {
         $output = $data;
-        if (is_array($output))
-                $output = implode(',', $output);
+        if ( is_array ( $output ) )
+                $output = implode ( ',', $output );
 
         echo "<script>console.log( 'Debug Objects: " . $output . "' );</script>";
 }
 
-function doesFileExist($file_name, $upload) {
-        if ($upload) {
-                $target_path = $GLOBALS['res_dir'] . $file_name;
-                if (file_exists($target_path)) {
+function doesFileExist ( $file_name, $upload ) {
+        if ( $upload ) {
+                $target_path = $GLOBALS[ 'res_dir' ] . $file_name;
+                if ( file_exists ( $target_path ) ) {
                         return TRUE;
                 } else {
                         return FALSE;
                 }
         } else {
-                if (($handle = fopen("$file_name", "x")) !== FALSE) {
-                        fclose($handle);
+                if ( ($handle = fopen ( "$file_name", "x" )) !== FALSE ) {
+                        fclose ( $handle );
                         return TRUE;
                 } else {
                         return FALSE;
@@ -26,144 +26,245 @@ function doesFileExist($file_name, $upload) {
         }
 }
 
-function importCSV() {
+function importCSV () {
 
 //    $file_name = 'alterego_current_stockline_green.csv';
 //    $target_path = $GLOBALS['res_dir'];
-        $file_name = basename($_FILES['uploadedfile']['name']);
-        if (empty($file_name)) {
+        $file_name = basename ( $_FILES[ 'uploadedfile' ][ 'name' ] );
+        if ( empty ( $file_name ) ) {
                 return;
         }
 
 //    $source_file = "D:/Documents/work/Seduce/alterego/stock_files/" . $file_name;
-        $source_file = realpath($_FILES['uploadedfile']['tmp_name']);
+        $source_file = realpath ( $_FILES[ 'uploadedfile' ][ 'tmp_name' ] );
 
-        $file_name = str_replace('-', '_', $file_name);
+        $file_name = str_replace ( '-', '_', $file_name );
 
-        $target_path = $_SERVER['DOCUMENT_ROOT'] . '/ImagesFromCSV/resources/' . $file_name;
+        $target_path = $_SERVER[ 'DOCUMENT_ROOT' ] . '/StockPicker/resources/' . $file_name;
 
-        if (copy($source_file, $target_path) !== TRUE) {
+        if ( copy ( $source_file, $target_path ) !== TRUE ) {
                 return FALSE;
         }
 
-        if (!isset($_SESSION)) {
-                session_start();
+        if ( ! isset ( $_SESSION ) ) {
+                session_start ();
         }
-        $_SESSION["filename"] = $file_name;
+        $_SESSION[ "filename" ] = $file_name;
 
         return $file_name;
 }
 
-function getCSVHeaders($file_name) {
+function getCSVHeaders ( $file_name ) {
 
-        $resources_dir = $GLOBALS['res_dir'];
+        $resources_dir = $GLOBALS[ 'res_dir' ];
         $file_url = $resources_dir . $file_name;
 
-        if (($handle = fopen("$file_url", "r")) !== FALSE) {
+        if ( ($handle = fopen ( "$file_url", "r" )) !== FALSE ) {
 
-                $headers = fgetcsv($handle, 1000, ",");
-                fclose($handle);
+                $headers = fgetcsv ( $handle, 1000, "," );
+                fclose ( $handle );
         }
         return $headers;
 }
 
-function getGroupIDBase($largest_id) {
+function getGroupIDBase ( $largest_id ) {
 
-        $len = strlen($largest_id);
-        $base = pow(10, $len);
+        $len = strlen ( $largest_id );
+        $base = pow ( 10, $len );
 
         return $base;
 }
 
-function getImage($file_url, $brand, $SKU, $index) {
+function getImage ( $file_url, $brand, $SKU, $index ) {
 
-        $media_dir = $GLOBALS['media_dir'];
+        $media_dir = $GLOBALS[ 'media_dir' ];
 
-        if (!is_dir($media_dir)) {
-                mkdir($media_dir);
+        if ( ! is_dir ( $media_dir ) ) {
+                mkdir ( $media_dir );
         }
 
-        if (basename($file_url) === "" || basename($file_url) === "no_selection") {
+        if ( basename ( $file_url ) === "" || basename ( $file_url ) === "no_selection" ) {
                 return "$media_dir . image_coming_soon.jpg";
         }
 
-        $media_dir = $media_dir . strtolower($brand) . '/';
-        $media_dir = str_replace(' ', '', $media_dir);
-        $SKU = str_replace('/', '', $SKU);
+        $media_dir = $media_dir . strtolower ( $brand ) . '/';
+        $media_dir = str_replace ( ' ', '', $media_dir );
+        $SKU = str_replace ( '/', '', $SKU );
 
-        if (!is_dir($media_dir)) {
-                mkdir($media_dir);
+        if ( ! is_dir ( $media_dir ) ) {
+                mkdir ( $media_dir );
         }
 
         // $file_url should be one url but sometimes we are sent two
-        $source = explode(',', $file_url);
-        $file = $source[0];
+        $source = explode ( ',', $file_url );
+        $file = $source[ 0 ];
 
-        $image_path = $media_dir . basename($file);
-        $path_parts = pathinfo($image_path);
-        $ext = '.' . $path_parts['extension'];
+        $image_path = $media_dir . basename ( $file );
+        $path_parts = pathinfo ( $image_path );
+        $ext = '.' . $path_parts[ 'extension' ];
 
-        if ($index === 0) {
+        if ( $index === 0 ) {
                 $new_name = $media_dir . $SKU . $ext;
         } else {
-                if (empty($index)) {
+                if ( empty ( $index ) ) {
                         $index = 1;
                 }
                 $new_name = $media_dir . $SKU . '_' . $index . $ext;
         }
 
         // if sku name exists do nothing   
-        if (file_exists($new_name)) {
-                if (file_exists($image_path) && $new_name !== $image_path) {
-                        unlink($image_path);
+        if ( file_exists ( $new_name ) ) {
+                if ( file_exists ( $image_path ) && $new_name !== $image_path ) {
+                        unlink ( $image_path );
                 }
                 return $new_name;
         }
         // if original image name exists change its name
-        if (file_exists($image_path)) {
+        if ( file_exists ( $image_path ) ) {
 
-                $SKU = str_replace('_', '', $SKU);
-                $SKU = str_replace(' ', '', $SKU);
+                $SKU = str_replace ( '_', '', $SKU );
+                $SKU = str_replace ( ' ', '', $SKU );
 
-                if (rename($image_path, $new_name)) {
+                if ( rename ( $image_path, $new_name ) ) {
                         return $new_name;
                 } else {
-                        $err = error_get_last();
+                        $err = error_get_last ();
                         return FALSE;
                 }
         }
         // if no name exists download image from web and change name to sku name
-        if (!file_exists($image_path)) {
+        if ( ! file_exists ( $image_path ) ) {
 
-                $SKU = str_replace('_', '', $SKU);
-                $SKU = str_replace(' ', '', $SKU);
+                $SKU = str_replace ( '_', '', $SKU );
+                $SKU = str_replace ( ' ', '', $SKU );
 
                 $image_path = $media_dir . $SKU . $ext;
-                copy($file, $image_path);
+                copy ( $file, $image_path );
                 return $image_path;
         }
-
 
         return "$media_dir . image_coming_soon.jpg";
 }
 
-function createImageArray($row) {
+function downloadImage ( $product, $image_array ) {
 
-        if (isset($row) && !empty($row)) {
+        if ( isset ( $product ) && ! empty ( $product ) ) {
+
+                $media_dir = $GLOBALS[ 'media_dir' ];
+
+                if ( ! is_dir ( $media_dir ) ) {
+                        mkdir ( $media_dir );
+                }
+
+                if ( basename ( $file_url ) === "" || basename ( $file_url ) === "no_selection" ) {
+                        return "$media_dir . image_coming_soon.jpg";
+                }
+
+                $media_dir = $media_dir . strtolower ( $product[ 'Brand' ] ) . '/';
+                $media_dir = str_replace ( ' ', '', $media_dir );
+                $SKU = str_replace ( '/', '', $product[ 'SKU' ] );
+
+                if ( ! is_dir ( $media_dir ) ) {
+                        mkdir ( $media_dir );
+                }
+
+                $index = 0;
+                $new_image_array = [];
+
+                foreach ( $image_array as $remote_url ) {
+
+                        $image_path = $media_dir . basename ( $remote_url );
+                        $path_parts = pathinfo ( $image_path );
+                        $ext = '.' . $path_parts[ 'extension' ];
+
+                        if ( $index === 0 ) {
+                                $local_url = $media_dir . $SKU . $ext;
+                        } else {
+                                $local_url = $media_dir . $SKU . '_' . $index . $ext;
+                        }
+
+                        // if remote url doesn't exist or is 'no selection' default to image_coming_soon.jpg
+                        if ( basename ( $remote_url ) === "" || basename ( $remote_url ) === "no_selection" ) {
+                                $local_url = "$media_dir . image_coming_soon.jpg";
+                        }
+
+                        // if local url exists do nothing   
+                        if ( file_exists ( $local_url ) ) {
+                                if ( file_exists ( $image_path ) && $local_url !== $image_path ) {
+                                        unlink ( $image_path );
+                                }
+                        }
+                        // if original image name exists change its name
+                        if ( file_exists ( $image_path ) ) {
+
+                                $SKU = str_replace ( '_', '', $SKU );
+                                $SKU = str_replace ( ' ', '', $SKU );
+
+                                if ( ! rename ( $image_path, $local_url ) ) {
+                                        return FALSE;
+                                }
+                        }
+                        // if no name exists download image from web and change name to sku name
+                        if ( ! file_exists ( $image_path ) ) {
+
+                                $SKU = str_replace ( '_', '', $SKU );
+                                $SKU = str_replace ( ' ', '', $SKU );
+
+//                                $image_path = $media_dir . $SKU . $ext;
+//                                copy ( $remote_url, $image_path );      
+                                copy ( $remote_url, $local_url );
+                        }
+
+                        $new_image_array[ $local_url ] = $remote_url;
+
+                        $index ++;
+                }
+                return $new_image_array;
+        }
+}
+
+//
+//function createImageArray2 ( $product ) {
+//
+//        if ( isset ( $product ) && ! empty ( $product ) ) {
+//
+//                $image_array = [];
+//
+//                $value = str_replace ( ',', ' ', $product[ 'Image' ] );
+//                $value = explode ( ' ', $value );
+//                $image_array [] = $value[ 0 ];
+//
+//                foreach ( $product as $key => $field ) {
+//                        if ( substr ( $key, 0, 5 ) == 'Image' ) {
+//                                $temp = str_replace ( ',', ' ', $field );
+//                                $value = explode ( ' ', $temp );
+//                                foreach ( $value as $url ) {
+//                                        if ( ! in_array ( $url, $image_array ) && stripos ( $url, 'https://' ) === 0 ) {
+//                                                $image_array [] = $url;
+//                                        }
+//                                }
+//                        }
+//                }
+//                return $image_array;
+//        }
+//}
+
+function createImageArray ( $row ) {
+
+        if ( isset ( $row ) && ! empty ( $row ) ) {
 
                 $image_array = [];
-                $fields_array = [];
 
-                $value = str_replace(',', ' ', $row['Image']);
-                $value = explode(' ', $value);
-                $image_array [] = $value[0];
+                $value = str_replace ( ',', ' ', $row[ 'Image' ] );
+                $value = explode ( ' ', $value );
+                $image_array [] = $value[ 0 ];
 
-                foreach ($row as $key => $field) {
-                        if (substr($key, 0, 5) == 'Image') {
-                                $temp = str_replace(',', ' ', $field);
-                                $value = explode(' ', $temp);
-                                foreach ($value as $url) {
-                                        if (!in_array($url, $image_array) && stripos($url, 'https://') === 0) {
+                foreach ( $row as $key => $field ) {
+                        if ( substr ( $key, 0, 5 ) == 'Image' ) {
+                                $temp = str_replace ( ',', ' ', $field );
+                                $value = explode ( ' ', $temp );
+                                foreach ( $value as $url ) {
+                                        if ( ! in_array ( $url, $image_array ) && stripos ( $url, 'https://' ) === 0 ) {
                                                 $image_array [] = $url;
                                         }
                                 }
@@ -173,74 +274,74 @@ function createImageArray($row) {
         }
 }
 
-function getBaseName($name) {
+function getBaseName ( $name ) {
 
-        $resource_file = $GLOBALS['res_file'];
-        $colours = getResourceFromXML($resource_file, 'alterego_colours');
+        $resource_file = $GLOBALS[ 'res_file' ];
+        $colours = getResourceFromXML ( $resource_file, 'alterego_colours' );
 
-        foreach ($colours as $colour) {
-                $index = stripos($name, $colour);
-                if ($index !== FALSE) {
-                        $base_name = substr($name, 0, $index);
-                        $base_name = trim($base_name, '_');
+        foreach ( $colours as $colour ) {
+                $index = stripos ( $name, $colour );
+                if ( $index !== FALSE ) {
+                        $base_name = substr ( $name, 0, $index );
+                        $base_name = trim ( $base_name, '_' );
                         return $base_name;
                 }
         }
         return $name;
 }
 
-function generateParentSKU($SKU) {
+function generateParentSKU ( $SKU ) {
 
-        $SKU = str_replace('?', '_', $SKU);
-        $SKU = str_replace('(', '_', $SKU);
-        $SKU = str_replace(')', '_', $SKU);
-        $SKU = str_replace('-', '_', $SKU);
-        $SKU = str_replace('/', '_', $SKU);
-        $SKU = str_replace(' ', '_', $SKU);
-        $SKU = str_replace("'", '_', $SKU);
-        $SKU = str_replace('__', '_', $SKU);
+        $SKU = str_replace ( '?', '_', $SKU );
+        $SKU = str_replace ( '(', '_', $SKU );
+        $SKU = str_replace ( ')', '_', $SKU );
+        $SKU = str_replace ( '-', '_', $SKU );
+        $SKU = str_replace ( '/', '_', $SKU );
+        $SKU = str_replace ( ' ', '_', $SKU );
+        $SKU = str_replace ( "'", '_', $SKU );
+        $SKU = str_replace ( '__', '_', $SKU );
 
-        if (stripos($SKU, "fleur") > 0) {
-                $SKU = removeAccents($SKU);
+        if ( stripos ( $SKU, "fleur" ) > 0 ) {
+                $SKU = removeAccents ( $SKU );
         }
 
 //    $b = array("á", "é", "í", "ó", "ú", "n");
 //    $c = array("a", "e", "i", "o", "u", "n");
 //    $SKU = str_replace($b, $c, $SKU);
 
-        $SKU = strtoupper($SKU);
+        $SKU = strtoupper ( $SKU );
 
-        $SKU = getBaseName($SKU);
+        $SKU = getBaseName ( $SKU );
 
         return $SKU;
 }
 
-function removeAccents($str, $utf8 = true) {
-        $str = (string) $str;
-        if (is_null($utf8)) {
-                if (!function_exists('mb_detect_encoding')) {
-                        $utf8 = (strtolower(mb_detect_encoding($str)) == 'utf-8');
+function removeAccents ( $str, $utf8 = true ) {
+        $str = ( string ) $str;
+        if ( is_null ( $utf8 ) ) {
+                if ( ! function_exists ( 'mb_detect_encoding' ) ) {
+                        $utf8 = (strtolower ( mb_detect_encoding ( $str ) ) == 'utf-8');
                 } else {
-                        $length = strlen($str);
+                        $length = strlen ( $str );
                         $utf8 = true;
-                        for ($i = 0; $i < $length; $i++) {
-                                $c = ord($str[$i]);
-                                if ($c < 0x80)
+                        for ( $i = 0; $i < $length; $i ++ ) {
+                                $c = ord ( $str[ $i ] );
+                                if ( $c < 0x80 )
                                         $n = 0;# 0bbbbbbb
-                                elseif (($c & 0xE0) == 0xC0)
+                                elseif ( ($c & 0xE0) == 0xC0 )
                                         $n = 1;# 110bbbbb
-                                elseif (($c & 0xF0) == 0xE0)
+                                elseif ( ($c & 0xF0) == 0xE0 )
                                         $n = 2;# 1110bbbb
-                                elseif (($c & 0xF8) == 0xF0)
+                                elseif ( ($c & 0xF8) == 0xF0 )
                                         $n = 3;# 11110bbb
-                                elseif (($c & 0xFC) == 0xF8)
+                                elseif ( ($c & 0xFC) == 0xF8 )
                                         $n = 4;# 111110bb
-                                elseif (($c & 0xFE) == 0xFC)
+                                elseif ( ($c & 0xFE) == 0xFC )
                                         $n = 5;# 1111110b
                                 else
                                         return false;# Does not match any model
-                                for ($j = 0; $j < $n; $j++) { # n bytes matching 10bbbbbb follow ?
-                                        if (( ++$i == $length) || ((ord($str[$i]) & 0xC0) != 0x80)) {
+                                for ( $j = 0; $j < $n; $j ++ ) { # n bytes matching 10bbbbbb follow ?
+                                        if ( ( ++ $i == $length) || ((ord ( $str[ $i ] ) & 0xC0) != 0x80) ) {
                                                 $utf8 = false;
                                                 break;
                                         }
@@ -249,9 +350,9 @@ function removeAccents($str, $utf8 = true) {
                 }
         }
 
-        if (!$utf8)
-                $str = utf8_encode($str);
-        $transliteration = array(
+        if ( ! $utf8 )
+                $str = utf8_encode ( $str );
+        $transliteration = array (
             'Ĳ' => 'I', 'Ö' => 'O', 'Œ' => 'O', 'Ü' => 'U', 'ä' => 'a', 'æ' => 'a',
             'ĳ' => 'i', 'ö' => 'o', 'œ' => 'o', 'ü' => 'u', 'ß' => 's', 'ſ' => 's',
             'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A',
@@ -346,35 +447,35 @@ function removeAccents($str, $utf8 = true) {
             'ჩ' => 'c', 'ც' => 't', 'ძ' => 'd', 'წ' => 't', 'ჭ' => 'c', 'ხ' => 'k',
             'ჯ' => 'j', 'ჰ' => 'h', '\ufffd' => 'e'
         );
-        $str = str_replace(array_keys($transliteration), array_values($transliteration), $str);
+        $str = str_replace ( array_keys ( $transliteration ), array_values ( $transliteration ), $str );
         return $str;
 }
 
-function showProducts($start_row, $items_per_page, $filters = FALSE) {
+function showProducts ( $start_row, $items_per_page, $filters = FALSE ) {
 
-        if ($start_row < 0) {
+        if ( $start_row < 0 ) {
                 $start_row = 0;
         }
-        if (!isset($_SESSION)) {
-                session_start();
+        if ( ! isset ( $_SESSION ) ) {
+                session_start ();
         }
-        $table_name = $_SESSION['table_name'];
+        $tableName = $GLOBALS[ 'tablename' ];
 
-        $conn = openDB('rwk_productchooserdb');
+        $conn = openDB ( 'rwk_productchooserdb' );
 
-        $data = getGroupedProductData($conn, $table_name, $start_row, $items_per_page, $filters);
-        $html = productDataToHtml($data);
+        $data = getGroupedProductData ( $conn, $tableName, $start_row, $items_per_page, $filters );
+        $html = productDataToHtml ( $data );
 
-        return implode(' ', $html);
+        return implode ( ' ', $html );
 }
 
-function productDataToHtml($data) {
+function productDataToHtml ( $data ) {
+
+        $numProducts = 0;
 
         $html_array[] = '<div id="product_data" class="base_layer">';
 
-        foreach ($data as $group) {
-
-                $group_id = $group['group_id'];
+        foreach ( $data as $group_id => $group ) {
 
                 $html_array[] = '<div class="product_box">';
 
@@ -383,13 +484,13 @@ function productDataToHtml($data) {
                 $html_array[] = '<div id="carousel_' . $group_id . '" class="carousel">';
                 $html_array[] = '<input id="left_btn_' . $group_id . '" type="button" value="<" class="left_button image_slide_btn" name="left_btn_' . $group_id . '" data-id="' . $group_id . '" data-direction="left"/>';
                 $html_array[] = '<input id="right_btn_' . $group_id . '" type="button" value=">" class="right_button image_slide_btn" name="right_btn_' . $group_id . '" data-id="' . $group_id . '" data-direction="right"/>';
-                $images = explode(',', $group['images']);
-                $count = count($images);
+                $images = explode ( ',', $group[ 'images' ] );
+                $count = count ( $images );
                 $html_array[] = '<ul data-count="' . $count . '">';
                 $index = 1;
-                foreach ($images as $image) {
+                foreach ( $images as $image ) {
                         $html_array[] = '<li><img id="image_' . $group_id . '_' . $index . '" class="image" src="' . $image . '"></li>';
-                        $index++;
+                        $index ++;
                 }
                 $html_array[] = '</ul>';
                 $html_array[] = '</div>'; // carousel
@@ -400,40 +501,41 @@ function productDataToHtml($data) {
 
                 $html_array[] = '<div class="group_box">';
 
-                foreach ($group['products'] as $product) {
+                foreach ( $group[ 'products' ] as $product ) {
+                        $numProducts ++;
                         $html_array[] = '<div class="info_box half">';
 
                         $html_array[] = '<div class="table_row">';
-                        $html_array[] = '<div id="name_' . $product['Product_ID'] . '" class="info_item">Name : ' . $product['Name'] . '</div>';
-                        $html_array[] = '<div  id="brand_' . $product['Product_ID'] . '" class="info_item">Brand : ' . $product['Brand'] . '</div>';
+                        $html_array[] = '<div id="name_' . $product[ 'Product_ID' ] . '" class="info_item">Name : ' . $product[ 'Name' ] . '</div>';
+                        $html_array[] = '<div  id="brand_' . $product[ 'Product_ID' ] . '" class="info_item">Brand : ' . $product[ 'Brand' ] . '</div>';
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
-                        $html_array[] = '<div id="price_' . $product['Product_ID'] . '" class="info_item">Price : £' . $product['Price_RRP'] . '</div>';
-                        $html_array[] = '<div id="trade_price_' . $product['Product_ID'] . '" class="info_item">Trade Price : £' . $product['Trade_Price'] . '</div>';
+                        $html_array[] = '<div id="price_' . $product[ 'Product_ID' ] . '" class="info_item">Price : £' . $product[ 'Price_RRP' ] . '</div>';
+                        $html_array[] = '<div id="trade_price_' . $product[ 'Product_ID' ] . '" class="info_item">Trade Price : £' . $product[ 'Trade_Price' ] . '</div>';
 
-                        if ($product['Selling'] == TRUE) {
-                                $html_array[] = '<div class="info_item">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox" type="checkbox"  data-id="' . $product['Product_ID'] . '" checked></div>';
+                        if ( $product[ 'Selling' ] == TRUE ) {
+                                $html_array[] = '<div class="info_item">Selling : <input id="selling_' . $product[ 'Product_ID' ] . '" class="selling_checkbox" type="checkbox"  data-id="' . $product[ 'Product_ID' ] . '" checked></div>';
                         } else {
-                                $html_array[] = '<div class="info_item">Selling : <input id="selling_' . $product['Product_ID'] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $product['Product_ID'] . '"></div>';
+                                $html_array[] = '<div class="info_item">Selling : <input id="selling_' . $product[ 'Product_ID' ] . '" class="selling_checkbox"  type="checkbox"  data-id="' . $product[ 'Product_ID' ] . '"></div>';
                         }
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
-                        $html_array[] = '<div  id="product_id_' . $product['Product_ID'] . '" class="info_item">Product ID : ' . $product['Product_ID'] . '</div>';
-                        $html_array[] = '<div  id="sku_' . $product['Product_ID'] . '" class="info_item">SKU : ' . $product['SKU'] . '</div>';
+                        $html_array[] = '<div  id="product_id_' . $product[ 'Product_ID' ] . '" class="info_item">Product ID : ' . $product[ 'Product_ID' ] . '</div>';
+                        $html_array[] = '<div  id="sku_' . $product[ 'Product_ID' ] . '" class="info_item">SKU : ' . $product[ 'SKU' ] . '</div>';
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
-                        $html_array[] = '<div  id="size_' . $product['Product_ID'] . '" class="info_item">Size : ' . $product['Size'] . '</div>';
-                        $html_array[] = '<div  id="colour_' . $product['Product_ID'] . '" class="info_item">Colour : ' . $product['Colour'] . '</div>';
+                        $html_array[] = '<div  id="size_' . $product[ 'Product_ID' ] . '" class="info_item">Size : ' . $product[ 'Size' ] . '</div>';
+                        $html_array[] = '<div  id="colour_' . $product[ 'Product_ID' ] . '" class="info_item">Colour : ' . $product[ 'Colour' ] . '</div>';
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
 
-                        $html_array[] = '<div class="info_item tooltip_target">Stock Type : ' . $product['Stock_Type'];
+                        $html_array[] = '<div class="info_item tooltip_target">Stock Type : ' . $product[ 'Stock_Type' ];
                         $html_array[] = '<div class="tooltip_text">Stock Lines are available all year round,<br>This is the majority of our products.</div></div>';
-                        $html_array[] = '<div  class="info_item tooltip_target">Stock Level : ' . $product['Stock_Level'];
+                        $html_array[] = '<div  class="info_item tooltip_target">Stock Level : ' . $product[ 'Stock_Level' ];
                         $html_array[] = '<div class="tooltip_text">Green – this item is in stock<br>Amber – this item is in stock, but stock levels are low<br>Red – this item is out of stock or sold out<br>Blue – this item is pre-order continuity (available all year) or pre-order fashion.</div></div>';
                         $html_array[] = '</div>'; // table_row
 
@@ -444,7 +546,7 @@ function productDataToHtml($data) {
                 $html_array[] = '<div class="group_box">';
                 $html_array[] = '<div class="info_box">';
 //                $html_array[] = '<p class="simple_span"><label id="description_' . $product['Product_ID'] . '">' . $product['Description'] . '</label></p>';
-                $html_array[] = '<div  id="description_' . $product['Product_ID'] . '" class="table_row"><label>' . $product['Description'] . '</label></div>';
+                $html_array[] = '<div  id="description_' . $product[ 'Product_ID' ] . '" class="table_row"><label>' . $product[ 'Description' ] . '</label></div>';
                 $html_array[] = '</div>'; // info_box
                 $html_array[] = '</div>'; // group_box
                 $html_array[] = '</div>'; // right_box
@@ -452,132 +554,227 @@ function productDataToHtml($data) {
         }
         $html_array[] = '</div>'; // base_layer
 
+        $GLOBALS[ 'numproducts' ] = $numProducts;
+
         return $html_array;
 }
 
-function exportToCSV($wholesaler) {
+function exportToCSV ( $wholesaler ) {
 
         // at export we have to download all the remaining images from web
 
-        $ini_val = ini_get('upload_tmp_dir');
-        $temp_path = $ini_val ? $ini_val : sys_get_temp_dir();
-        if (!isset($_SESSION)) {
-                session_start();
+        $ini_val = ini_get ( 'upload_tmp_dir' );
+        $temp_path = $ini_val ? $ini_val : sys_get_temp_dir ();
+        if ( ! isset ( $_SESSION ) ) {
+                session_start ();
         }
-        $table_name = $_SESSION['table_name'];
 
-        $conn = openDB('rwk_productchooserdb');
+        $tableName = $GLOBALS[ 'tablename' ];
 
-        $file_url = $temp_path . '/' . $table_name . '.csv';
+        $conn = openDB ( 'rwk_productchooserdb' );
+
+        $file_url = $temp_path . '/' . $tableName . '.csv';
 
         $row = 0;
-        $max_id = getLargestID($table_name);
-        $group_id_base = getGroupIDBase($max_id);
+        $max_id = getLargestID ( $tableName );
+        $group_id_base = getGroupIDBase ( $max_id );
 
-        if (($handle = fopen("$file_url", "w")) !== FALSE) {
+        if ( ($handle = fopen ( "$file_url", "w" )) !== FALSE ) {
 
-                $woo_headers = array_keys(getResourceFromXML($GLOBALS['res_file'], $wholesaler . '_map', 'map'));
+                $woo_headers = array_keys ( getResourceFromXML ( $GLOBALS[ 'res_file' ], $wholesaler . '_map', 'map' ) );
 
-                $result = fputcsv($handle, $woo_headers);
+                $result = fputcsv ( $handle, $woo_headers );
 
-                $groups = getGroups($conn, $table_name);
-                foreach ($groups as $parent => $value) {
-                        $result = getProductsByID($conn, $table_name, $value);
-                        if (!empty($result)) {
-                                $groupArray = createGroup($result, $wholesaler, $parent);
-                                foreach ($groupArray as $product) {
-                                        fputcsv($handle, $product);
+                $groups = getGroups ( $conn, $tableName, TRUE );
+//                $selling = getProductsBySelling($table_name);
+
+
+
+                foreach ( $groups as $parent ) {
+                        $products = getProductsByParent ( $conn, $tableName, $parent[ 'Parent' ], TRUE );
+                        if ( ! empty ( $products ) ) {
+                                $groupArray = createGroup ( $products, $wholesaler, $parent[ 'Parent' ] );
+                                foreach ( $groupArray as $product ) {
+                                        fputcsv ( $handle, $product );
                                 }
                         }
                 }
+//                 foreach ( $selling as  $row ) {
+//                        $result = getProductsByID ( $conn, $table_name, $value );
+//                        if ( ! empty ( $result ) ) {
+//                                $groupArray = createGroup ( $result, $wholesaler, $parent );
+//                                foreach ( $groupArray as $product ) {
+//                                        fputcsv ( $handle, $product );
+//                                }
+//                        }
+//                }
         }
 
-        fclose($handle);
-        $conn->close();
+        fclose ( $handle );
+        $conn -> close ();
 
         return TRUE;
 }
 
-function createGroup($result, $wholesaler, $parent) {
+function createGroup ( $products, $wholesaler, $parent ) {
 
-        $map = getResourceFromXML($GLOBALS['res_file'], $wholesaler . '_map', "map", TRUE);
+        $map = getResourceFromXML ( $GLOBALS[ 'res_file' ], $wholesaler . '_map', "map" );
         $group_added = FALSE;
-        $num_products = count($result);
+        $num_products = count ( $products );
 
-        foreach ($map as $wookey => $woovalue) {
-                // $new_array[0] is the group
-                if (stripos($wookey, 'attribute') === FALSE) {
-                        $new_array[0][$wookey] = $woovalue === "" ? "" : $result[0][$woovalue];
-                        for ($i = 1; $i <= $num_products; $i++) {
-                                $new_array[$i][$wookey] = $woovalue === "" ? "" : $result[$i - 1][$woovalue];
+        foreach ( $map as $wookey => $woovalue ) {
+                // $new_array[0] is the variable product
+                if ( stripos ( $wookey, 'attribute' ) === FALSE ) {
+                        $new_array[ 0 ][ $wookey ] = $woovalue === "" ? "" : $products[ 0 ][ $woovalue ];
+                        for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                $new_array[ $i ][ $wookey ] = $woovalue === "" ? "" : $products[ $i - 1 ][ $woovalue ];
                         }
                 } else {
-                        if ($woovalue !== "") {
-                                $num = intval(preg_replace('/[^0-9]+/', '', $wookey), 10);
-                                $new_array[0][$wookey] = $woovalue;
-                                for ($i = 1; $i <= $num_products; $i++) {
-                                        $new_array[$i][$wookey] = $woovalue;
+                        if ( $woovalue !== "" ) {
+                                $num = intval ( preg_replace ( '/[^0-9]+/', '', $wookey ), 10 );
+                                $new_array[ 0 ][ $wookey ] = $woovalue;
+                                for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                        $new_array[ $i ][ $wookey ] = $woovalue;
                                 }
-                                for ($i = 1; $i <= $num_products; $i++) {
-                                        $new_array[0]['Attribute ' . $num . ' value(s)'] = $new_array[0]['Attribute ' . $num . ' value(s)'] . ',' . $result[$i - 1][$woovalue];
-                                        $new_array[$i]['Attribute ' . $num . ' value(s)'] = $result[$i - 1][$woovalue];
+                                for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                        $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] . ',' . $products[ $i - 1 ][ $woovalue ];
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' value(s)' ] = $products[ $i - 1 ][ $woovalue ];
 
-                                        $new_array[$i]['Attribute ' . $num . ' visible'] = 1;
-                                        $new_array[$i]['Attribute ' . $num . ' global'] = 1;
-                                        $new_array[$i]['Attribute ' . $num . ' default'] = "";
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' visible' ] = 1;
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' global' ] = 1;
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' default' ] = "";
                                 }
-                                $new_array[0]['Attribute ' . $num . ' value(s)'] = ltrim($new_array[0]['Attribute ' . $num . ' value(s)'], ',');
-                                $new_array[0]['Attribute ' . $num . ' visible'] = 1;
-                                $new_array[0]['Attribute ' . $num . ' global'] = 1;
-                                $new_array[0]['Attribute ' . $num . ' default'] = $result[0][$woovalue];
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = ltrim ( $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ], ',' );
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' visible' ] = 1;
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' global' ] = 1;
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' default' ] = $products[ 0 ][ $woovalue ];
                         }
                 }
         }
 
         // get any images that haven't been downloaded
-        $file_url = explode(',', $result[0]['Image']);
-        foreach ($file_url as $url) {
-                $image .= ',' . 'http://localhost/ImagesFromCSV' . ltrim(getImage($url, $result[0]['Brand'], $result[0]['SKU'], 0), '.');
+        $file_url = explode ( ',', $products[ 0 ][ 'Image' ] );
+        foreach ( $file_url as $url ) {
+                $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $products[ 0 ][ 'Brand' ], $products[ 0 ][ 'SKU' ], 0 ), '.' );
         }
-        $image = ltrim($image, ',');
+        $image = ltrim ( $image, ',' );
 
-        $new_array[0]['Name'] = getBaseName($new_array[0]['Name']);
-        $new_array[0]['Type'] = 'variable';
-        $new_array[0]['Published'] = '1';
-        $new_array[0]['Is featured?'] = '0';
-        $new_array[0]['Visibility in catalogue'] = 'visible';
-        $new_array[0]['Backorders allowed?'] = '0';
-        $new_array[0]['Sold individually?'] = '0';
-        $new_array[0]['Allow customer reviews?'] = '0';
-        $new_array[0]['Position'] = '0';
-        $new_array[0]['Images'] = $image;
-        $new_array[0]['SKU'] = $parent;
+        $new_array[ 0 ][ 'Name' ] = getBaseName ( $new_array[ 0 ][ 'Name' ] );
+        $new_array[ 0 ][ 'Type' ] = 'variable';
+        $new_array[ 0 ][ 'Published' ] = '1';
+        $new_array[ 0 ][ 'Is featured?' ] = '0';
+        $new_array[ 0 ][ 'Visibility in catalogue' ] = 'visible';
+        $new_array[ 0 ][ 'Backorders allowed?' ] = '0';
+        $new_array[ 0 ][ 'Sold individually?' ] = '0';
+        $new_array[ 0 ][ 'Allow customer reviews?' ] = '0';
+        $new_array[ 0 ][ 'Position' ] = '0';
+        $new_array[ 0 ][ 'Images' ] = $image;
+        $new_array[ 0 ][ 'SKU' ] = $parent;
 
-        for ($i = 1; $i <= $num_products; $i++) {
+        for ( $i = 1; $i <= $num_products; $i ++ ) {
                 $image = "";
-                $file_url = explode(',', $result[$i - 1]['Image']);
-                foreach ($file_url as $url) {
-                        $image .= ',' . 'http://localhost/ImagesFromCSV' . ltrim(getImage($url, $result[0]['Brand'], $result[0]['SKU'], 0), '.');
+                $file_url = explode ( ',', $products[ $i - 1 ][ 'Image' ] );
+                foreach ( $file_url as $url ) {
+                        $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $products[ 0 ][ 'Brand' ], $products[ 0 ][ 'SKU' ], 0 ), '.' );
                 }
-                $image = ltrim($image, ',');
+                $image = ltrim ( $image, ',' );
 
-                $new_array[$i]['Type'] = 'variation';
-                $new_array[$i]['Published'] = '1';
-                $new_array[$i]['Is featured?'] = '0';
-                $new_array[$i]['Visibility in catalogue'] = 'visible';
-                $new_array[$i]['Backorders allowed?'] = '0';
-                $new_array[$i]['Sold individually?'] = '0';
-                $new_array[$i]['Allow customer reviews?'] = '0';
-                $new_array[$i]['Position'] = '0';
-                $new_array[$i]['Images'] = $image;
-                $new_array[$i]['SKU'] = str_replace('/', '', $new_array[$i]['SKU']);
-                $new_array[$i]['Parent'] = $parent;
+                $new_array[ $i ][ 'Type' ] = 'variation';
+                $new_array[ $i ][ 'Published' ] = '1';
+                $new_array[ $i ][ 'Is featured?' ] = '0';
+                $new_array[ $i ][ 'Visibility in catalogue' ] = 'visible';
+                $new_array[ $i ][ 'Backorders allowed?' ] = '0';
+                $new_array[ $i ][ 'Sold individually?' ] = '0';
+                $new_array[ $i ][ 'Allow customer reviews?' ] = '0';
+                $new_array[ $i ][ 'Position' ] = '0';
+                $new_array[ $i ][ 'Images' ] = $image;
+                $new_array[ $i ][ 'SKU' ] = str_replace ( '/', '', $new_array[ $i ][ 'SKU' ] );
+                $new_array[ $i ][ 'Parent' ] = $parent;
         }
 
         return $new_array;
 }
 
-function appendFilters() {
+function OldcreateGroup ( $result, $wholesaler, $parent ) {
+
+        $map = getResourceFromXML ( $GLOBALS[ 'res_file' ], $wholesaler . '_map', "map", TRUE );
+        $group_added = FALSE;
+        $num_products = count ( $result );
+
+        foreach ( $map as $wookey => $woovalue ) {
+                // $new_array[0] is the group
+                if ( stripos ( $wookey, 'attribute' ) === FALSE ) {
+                        $new_array[ 0 ][ $wookey ] = $woovalue === "" ? "" : $result[ 0 ][ $woovalue ];
+                        for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                $new_array[ $i ][ $wookey ] = $woovalue === "" ? "" : $result[ $i - 1 ][ $woovalue ];
+                        }
+                } else {
+                        if ( $woovalue !== "" ) {
+                                $num = intval ( preg_replace ( '/[^0-9]+/', '', $wookey ), 10 );
+                                $new_array[ 0 ][ $wookey ] = $woovalue;
+                                for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                        $new_array[ $i ][ $wookey ] = $woovalue;
+                                }
+                                for ( $i = 1; $i <= $num_products; $i ++ ) {
+                                        $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] . ',' . $result[ $i - 1 ][ $woovalue ];
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' value(s)' ] = $result[ $i - 1 ][ $woovalue ];
+
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' visible' ] = 1;
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' global' ] = 1;
+                                        $new_array[ $i ][ 'Attribute ' . $num . ' default' ] = "";
+                                }
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = ltrim ( $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ], ',' );
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' visible' ] = 1;
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' global' ] = 1;
+                                $new_array[ 0 ][ 'Attribute ' . $num . ' default' ] = $result[ 0 ][ $woovalue ];
+                        }
+                }
+        }
+
+        // get any images that haven't been downloaded
+        $file_url = explode ( ',', $result[ 0 ][ 'Image' ] );
+        foreach ( $file_url as $url ) {
+                $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $result[ 0 ][ 'Brand' ], $result[ 0 ][ 'SKU' ], 0 ), '.' );
+        }
+        $image = ltrim ( $image, ',' );
+
+        $new_array[ 0 ][ 'Name' ] = getBaseName ( $new_array[ 0 ][ 'Name' ] );
+        $new_array[ 0 ][ 'Type' ] = 'variable';
+        $new_array[ 0 ][ 'Published' ] = '1';
+        $new_array[ 0 ][ 'Is featured?' ] = '0';
+        $new_array[ 0 ][ 'Visibility in catalogue' ] = 'visible';
+        $new_array[ 0 ][ 'Backorders allowed?' ] = '0';
+        $new_array[ 0 ][ 'Sold individually?' ] = '0';
+        $new_array[ 0 ][ 'Allow customer reviews?' ] = '0';
+        $new_array[ 0 ][ 'Position' ] = '0';
+        $new_array[ 0 ][ 'Images' ] = $image;
+        $new_array[ 0 ][ 'SKU' ] = $parent;
+
+        for ( $i = 1; $i <= $num_products; $i ++ ) {
+                $image = "";
+                $file_url = explode ( ',', $result[ $i - 1 ][ 'Image' ] );
+                foreach ( $file_url as $url ) {
+                        $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $result[ 0 ][ 'Brand' ], $result[ 0 ][ 'SKU' ], 0 ), '.' );
+                }
+                $image = ltrim ( $image, ',' );
+
+                $new_array[ $i ][ 'Type' ] = 'variation';
+                $new_array[ $i ][ 'Published' ] = '1';
+                $new_array[ $i ][ 'Is featured?' ] = '0';
+                $new_array[ $i ][ 'Visibility in catalogue' ] = 'visible';
+                $new_array[ $i ][ 'Backorders allowed?' ] = '0';
+                $new_array[ $i ][ 'Sold individually?' ] = '0';
+                $new_array[ $i ][ 'Allow customer reviews?' ] = '0';
+                $new_array[ $i ][ 'Position' ] = '0';
+                $new_array[ $i ][ 'Images' ] = $image;
+                $new_array[ $i ][ 'SKU' ] = str_replace ( '/', '', $new_array[ $i ][ 'SKU' ] );
+                $new_array[ $i ][ 'Parent' ] = $parent;
+        }
+
+        return $new_array;
+}
+
+function appendFilters () {
 
 //        $html_array[] = '<div id="preset_filters" class="filters">';
         $html_array[] = '<div class="filters">';
@@ -593,16 +790,16 @@ function appendFilters() {
         $html_array[] = '<select id="brands" name="brand"  class="filter_type" style="float: right">';
         $html_array[] = '<option name="brand" value="Brand=All">All</option>';
 
-        if (!isset($_SESSION)) {
-                session_start();
+        if ( ! isset ( $_SESSION ) ) {
+                session_start ();
         }
-        $table_name = $_SESSION['table_name'];
+        $table_name = $GLOBALS[ 'tablename' ];
 
-        $brands = getBrands($table_name);
+        $brands = getBrands ( $table_name );
 
-        if ($brands !== FALSE) {
-                foreach ($brands as $brand) {
-                        $html_array[] = '<option name="brand" value="Brand=' . $brand['Brand'] . '">' . $brand['Brand'] . '</option>';
+        if ( $brands !== FALSE ) {
+                foreach ( $brands as $brand ) {
+                        $html_array[] = '<option name="brand" value="Brand=' . $brand[ 'Brand' ] . '">' . $brand[ 'Brand' ] . '</option>';
                 }
         }
 
@@ -614,35 +811,35 @@ function appendFilters() {
         $html_array[] = '<div class="filters">';
 
 
-        $cats = getCategories($table_name);
+        $cats = getCategories ( $table_name );
 
-        if ($cats !== FALSE) {
-                foreach ($cats as $cat) {
-                        $html_array[] = '[' . $cat['Category'] . ' <input name="' . $cat['Category'] . '" value="Categories=' . $cat['Category'] . '" class="filter_type" type="checkbox" unchecked>]';
+        if ( $cats !== FALSE ) {
+                foreach ( $cats as $cat ) {
+                        $html_array[] = '[' . $cat[ 'Category' ] . ' <input name="' . $cat[ 'Category' ] . '" value="Categories=' . $cat[ 'Category' ] . '" class="filter_type" type="checkbox" unchecked>]';
                 }
         }
 
         $html_array[] = '</div>';
 
-        return implode(' ', $html_array);
+        return implode ( ' ', $html_array );
 }
 
-function splitCats($input) {
+function splitCats ( $input ) {
 
         $cat_array = [];
-        $result_array = explode(',', $input);
+        $result_array = explode ( ',', $input );
 
-        foreach ($result_array as $cat) {
+        foreach ( $result_array as $cat ) {
 
-                $cat = str_replace('&', 'and', $cat);
-                if (strtolower($cat) !== 'dress') {
-                        $cat = ucfirst(rtrim($cat, 's'));
-                        if ($cat === 'Dresse') {
+                $cat = str_replace ( '&', 'and', $cat );
+                if ( strtolower ( $cat ) !== 'dress' ) {
+                        $cat = ucfirst ( rtrim ( $cat, 's' ) );
+                        if ( $cat === 'Dresse' ) {
                                 $cat = 'Dress';
                         }
                 }
-                $cat = rtrim($cat, "'");
-                if (!in_array($cat, $cat_array)) {
+                $cat = rtrim ( $cat, "'" );
+                if ( ! in_array ( $cat, $cat_array ) ) {
                         $cat_array[] = $cat;
                 }
         }

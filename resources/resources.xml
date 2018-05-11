@@ -280,8 +280,8 @@
         <header map="">Attribute 2 visible</header>
         <header map="">Attribute 2 global</header>
         <header map="">Attribute 2 default</header>
-        <header map="Material">Meta: _material</header> 
+<!--        <header map="Material">Meta: _material</header> 
         <header map="Trade_Price">Meta: _trade_price</header> 
-        <header map="Description_HTML">Meta: _htmldesc</header> 
+        <header map="Description_HTML">Meta: _htmldesc</header> -->
     </alterego_map>
 </resources>

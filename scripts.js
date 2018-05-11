@@ -1,4 +1,6 @@
 jQuery(document).ready(function ($) {
+        
+        var i=0;
 
         jQuery("#home_btn").click(function () {
 
