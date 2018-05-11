@@ -130,6 +130,10 @@ function getCategories ( $table_name ) {
         }
 }
 
+function createFilteredTable(){
+        
+}
+
 function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE ) {
 
         $sql = "SELECT DISTINCT Parent FROM {$table_name}_extra";

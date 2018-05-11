@@ -58,6 +58,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $items_per_page = $_POST[ 'ipp' ];
                         $filters = $_POST[ 'filter' ];
                         $filters = explode ( ',', $_POST[ 'filter' ] );
+                        
+                        createFilteredTable();
                         $html = showProducts ( $start_row, $items_per_page, $filters );
 
                         $return = array ( 'row' => $start_row, 'html' => "<div>Test</div>" );
