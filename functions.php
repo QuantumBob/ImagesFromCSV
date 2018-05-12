@@ -451,7 +451,7 @@ function removeAccents ( $str, $utf8 = true ) {
         return $str;
 }
 
-function showProducts ( $start_row, $items_per_page, $filters = FALSE ) {
+function showProducts ( $start_row, $items_per_page ) {
 
         if ( $start_row < 0 ) {
                 $start_row = 0;
@@ -463,7 +463,7 @@ function showProducts ( $start_row, $items_per_page, $filters = FALSE ) {
 
         $conn = openDB ( 'rwk_productchooserdb' );
 
-        $data = getGroupedProductData ( $conn, $tableName, $start_row, $items_per_page, $filters );
+        $data = getGroupedProductData ( $conn, $tableName, $start_row, $items_per_page );
         $html = productDataToHtml ( $data );
 
         return implode ( ' ', $html );

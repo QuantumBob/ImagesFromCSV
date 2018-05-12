@@ -70,7 +70,7 @@ function getTables () {
 
         $html[] = '<div id="tables">';
         foreach ( $result as $table ) {
-                if ( stripos ( $table[ 'table_name' ], '_groups' ) === FALSE && stripos ( $table[ 'table_name' ], '_map' ) === FALSE && stripos ( $table[ 'table_name' ], '_brands' ) === FALSE && stripos ( $table[ 'table_name' ], '_categories' ) === FALSE && stripos ( $table[ 'table_name' ], '_extra' ) === FALSE && stripos ( $table[ 'table_name' ], '_images' ) === FALSE ) {
+                if ( stripos ( $table[ 'table_name' ], '_groups' ) === FALSE && stripos ( $table[ 'table_name' ], '_map' ) === FALSE && stripos ( $table[ 'table_name' ], '_brands' ) === FALSE && stripos ( $table[ 'table_name' ], '_categories' ) === FALSE && stripos ( $table[ 'table_name' ], '_extra' ) === FALSE && stripos ( $table[ 'table_name' ], '_images' ) === FALSE && stripos ( $table[ 'table_name' ], '_filtered' ) === FALSE ) {
                         $html[] = "<input id='{$table[ 'table_name' ]}' class='button_class gen_table_btn'  type='button' name= '{$table[ 'table_name' ]}' value='{$table[ 'table_name' ]}' />";
                 }
         }
@@ -130,11 +130,57 @@ function getCategories ( $table_name ) {
         }
 }
 
-function createFilteredTable(){
-        
+function createFilteredTable ( $filters ) {
+
+        $table = $GLOBALS[ 'tablename' ];
+
+        $conn = openDB ( 'rwk_productchooserdb' );
+
+        $sql = "DROP TABLE IF EXISTS {$table}_filtered";
+        if ( $conn -> query ( $sql ) === FALSE ) {
+                return array ( "mysqli_error" => $conn -> error );
+        }
+
+        $where = FALSE;
+
+        $sql = "CREATE TABLE  {$table}_filtered SELECT * FROM {$table}";
+
+        if ( $filters[ 0 ] !== FALSE AND $filters[ 0 ] !== 'All' ) {
+
+                $filter_groups = [];
+                foreach ( $filters as $filter ) {
+                        $pos = strpos ( $filter, "=" );
+                        $lhs = substr ( $filter, 0, $pos );
+                        $lhs = trim ( $lhs );
+                        $rhs = substr ( $filter, $pos + 1 );
+                        $rhs = trim ( $rhs );
+//                                        $rhs = "'$rhs'";
+
+                        if ( array_key_exists ( $lhs, $filter_groups ) ) {
+                                $filter_groups[ $lhs ] = $filter_groups[ $lhs ] . ',' . $rhs;
+                        } else {
+                                $filter_groups[ $lhs ] = $rhs;
+                        }
+                }
+                $sql .= " WHERE ";
+                foreach ( $filter_groups as $key => $filter ) {
+                        if ( $key === 'Brand' && $filter === 'All' ) {
+                                continue;
+                        }
+                        if ( $key === 'Categories' ) {
+                                $sql .= "{$key} LIKE  '%{$filter}%'";
+                                continue;
+                        }
+                        $sql .= "{$key} IN ('{$filter}')";
+                        $sql .= " AND ";
+                }
+                $sql = rtrim ( $sql, 'AND ' );
+        }
+
+        $product_results = $conn -> query ( $sql );
 }
 
-function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE ) {
+function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page, $previous_page = FALSE ) {
 
         $sql = "SELECT DISTINCT Parent FROM {$table_name}_extra";
 //        $sql = "SELECT * FROM {$table_name}_extra";// ORDER BY Parent ASC";
@@ -155,39 +201,7 @@ function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page
                         $parent = $group_row[ 'Parent' ];
                         $parent = "'$parent'";
 
-                        //SELECT * FROM stocklines INNER JOIN stocklines_extra ON  stocklines.Product_ID = stocklines_extra.Product_ID WHERE stocklines_extra.Parent =  BASSAYA_CAMILA
-                        $sql = "SELECT * FROM {$table_name} INNER JOIN {$table_name}_extra ON  {$table_name}.Product_ID =  {$table_name}_extra.Product_ID  WHERE  {$table_name}_extra.Parent = {$parent}";
-
-                        if ( $filters[ 0 ] !== FALSE AND $filters[ 0 ] !== 'All' ) {
-                                $filter_groups = [];
-                                foreach ( $filters as $filter ) {
-                                        $pos = strpos ( $filter, "=" );
-                                        $lhs = substr ( $filter, 0, $pos );
-                                        $lhs = trim ( $lhs );
-                                        $rhs = substr ( $filter, $pos + 1 );
-                                        $rhs = trim ( $rhs );
-//                                        $rhs = "'$rhs'";
-
-                                        if ( array_key_exists ( $lhs, $filter_groups ) ) {
-                                                $filter_groups[ $lhs ] = $filter_groups[ $lhs ] . ',' . $rhs;
-                                        } else {
-                                                $filter_groups[ $lhs ] = $rhs;
-                                        }
-                                }
-                                $sql .= " AND ";
-                                foreach ( $filter_groups as $key => $filter ) {
-                                        if ( $key === 'Brand' && $filter === 'All' ) {
-                                                continue;
-                                        }
-                                        if ( $key === 'Categories' ) {
-                                                $sql .= "{$key} LIKE  '%{$filter}%'";
-                                                continue;
-                                        }
-                                        $sql .= "{$key} IN ('{$filter}')";
-                                        $sql .= " AND ";
-                                }
-                                $sql = rtrim ( $sql, 'AND ' );
-                        }
+                        $sql = "SELECT * FROM {$table_name}_filtered INNER JOIN {$table_name}_extra ON  {$table_name}_filtered.Product_ID =  {$table_name}_extra.Product_ID  WHERE  {$table_name}_extra.Parent = {$parent}";
 
                         $product_results = $conn -> query ( $sql );
 

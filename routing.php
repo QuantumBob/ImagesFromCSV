@@ -42,7 +42,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $items_per_page = $_POST[ 'ipp' ];
                         $filters = $_POST[ 'filter' ];
                         $filters = explode ( ',', $_POST[ 'filter' ] );
-                        $html = showProducts ( $start_row, $items_per_page, $filters );
+                         createFilteredTable($filters);
+                        $html = showProducts ( $start_row, $items_per_page );
 
                         $return = array ( 'row' => $start_row, 'html' => "<div>Test</div>" );
                         $json = json_encode ( $return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS );
@@ -58,9 +59,9 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $items_per_page = $_POST[ 'ipp' ];
                         $filters = $_POST[ 'filter' ];
                         $filters = explode ( ',', $_POST[ 'filter' ] );
-                        
-                        createFilteredTable();
-                        $html = showProducts ( $start_row, $items_per_page, $filters );
+
+                        createFilteredTable ( $filters );
+                        $html = showProducts ( $start_row, $items_per_page );
 
                         $return = array ( 'row' => $start_row, 'html' => "<div>Test</div>" );
                         $json = json_encode ( $return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS );
@@ -100,7 +101,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $start_row = $_POST[ 'current_row' ];
                         $items_per_page = $_POST[ 'ipp' ];
                         $filters = explode ( ',', $_POST[ 'filter' ] );
-                        $html = showProducts ( $start_row, $items_per_page, $filters );
+                        createFilteredTable ( $filters );
+                        $html = showProducts ( $start_row, $items_per_page );
                         $filters = appendFilters ();
 
                         $return = array ( 'row' => $start_row, 'html' => $html, 'filters' => $filters );
@@ -121,7 +123,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                                 session_start ();
                         }
                         $_SESSION[ 'table_name' ] = $_POST[ 'table_name' ];
-                        $html = showProducts ( $start_row, $items_per_page, $filters );
+                         createFilteredTable($filters);
+                        $html = showProducts ( $start_row, $items_per_page );
                         $filters = appendFilters ();
 
                         $return = array ( 'row' => $start_row, 'html' => $html, 'filters' => $filters );
@@ -135,7 +138,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $start_row = $_POST[ 'current_row' ] + $items_per_page;
                         $filters = explode ( ',', $_POST[ 'filter' ] );
 
-                        $html = showProducts ( $start_row, $items_per_page, $filters );
+                         createFilteredTable($filters);
+                        $html = showProducts ( $start_row, $items_per_page );
                         $return = array ( 'row' => $start_row, 'html' => $html );
                         $json = json_encode ( $return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS );
                         echo $json;
@@ -146,7 +150,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         $start_row = $_POST[ 'current_row' ] - $items_per_page;
                         $filters = explode ( ',', $_POST[ 'filter' ] );
 
-                        $html = showProducts ( $start_row, $items_per_page, $filters, TRUE );
+                         createFilteredTable($filters);
+                        $html = showProducts ( $start_row, $items_per_page, TRUE );
 
                         $return = array ( 'row' => $start_row, 'html' => $html );
                         $json = json_encode ( $return, JSON_HEX_TAG | JSON_HEX_QUOT | JSON_HEX_APOS );
