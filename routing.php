@@ -92,7 +92,8 @@ if ( isset ( $_POST[ 'action' ] ) && ! empty ( $_POST[ 'action' ] ) ) {
                         createCategoriesTable ( $conn );
                         createBrandsTable ( $conn );
                         createExtraTable ( $conn );
-                        createImagesTable ( $conn );
+//                        createImagesTable ( $conn );
+//                        createProductGroupsTable($conn);
                         // rupdate the support tables just created
                         updateSupportTables ( $conn );
 

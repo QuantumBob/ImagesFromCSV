@@ -143,7 +143,7 @@ function createFilteredTable ( $filters ) {
 
         $where = FALSE;
 
-        $sql = "CREATE TABLE  {$table}_filtered SELECT * FROM {$table}";
+        $sql = "CREATE TABLE  {$table}_filtered SELECT {$table}.*, {$table}_extra.Parent, {$table}_extra.Selling FROM {$table} INNER JOIN {$table}_extra ON {$table}.Product_ID = {$table}_extra.Product_ID";
 
         if ( $filters[ 0 ] !== FALSE AND $filters[ 0 ] !== 'All' ) {
 
@@ -182,9 +182,8 @@ function createFilteredTable ( $filters ) {
 
 function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page, $previous_page = FALSE ) {
 
-        $sql = "SELECT DISTINCT Parent FROM {$table_name}_extra";
-//        $sql = "SELECT * FROM {$table_name}_extra";// ORDER BY Parent ASC";
-        $sql .= " LIMIT {$start_row}, 1000000";
+        $offset = $start_row + $items_per_page;
+        $sql = "SELECT DISTINCT Parent FROM {$table_name}_filtered ORDER BY Parent ASC LIMIT {$start_row}, {$offset}";
         $groups_results = $conn -> query ( $sql );
         $array = [];
 
@@ -201,22 +200,14 @@ function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page
                         $parent = $group_row[ 'Parent' ];
                         $parent = "'$parent'";
 
-                        $sql = "SELECT * FROM {$table_name}_filtered INNER JOIN {$table_name}_extra ON  {$table_name}_filtered.Product_ID =  {$table_name}_extra.Product_ID  WHERE  {$table_name}_extra.Parent = {$parent}";
+//                        $sql = "SELECT * FROM {$table_name}_filtered INNER JOIN {$table_name}_extra ON  {$table_name}_filtered.Product_ID =  {$table_name}_extra.Product_ID  WHERE  {$table_name}_extra.Parent = {$parent}";
+                        $sql = "SELECT * FROM {$table_name}_filtered  WHERE  {$table_name}_filtered.Parent = {$parent}";
 
                         $product_results = $conn -> query ( $sql );
 
-//                        $sql = "SELECT * FROM {$table_name}_extra WHERE Product_ID IN ({$group_row[ 'Product_IDs' ]})";
-//                        $selling_results = $conn -> query ( $sql );
-//                        $selling_array = [];
-//                        foreach ( $selling_results as $selling_id ) {
-//                                $selling_array[ $selling_id[ 'Product_ID' ] ] = $selling_id[ 'Selling' ];
-//                        }
                         if ( $product_results !== FALSE && $product_results -> num_rows !== 0 ) {
                                 $num_groups ++;
                                 foreach ( $product_results as $product ) {
-
-//                                        $image_array = createImageArray ( $product );
-//                                        $image_array = downloadImage ( $product, $image_array );
 
                                         $image_array_in = explode ( ',', $product[ 'Image' ] );
                                         $image_array_out = [];
@@ -244,14 +235,7 @@ function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page
                                                 $result = updateImageField ( $conn, $table_name, $images, $product[ 'Product_ID' ] );
                                         }
 
-//                                        if ( array_key_exists ( $product[ 'Product_ID' ], $selling_array ) ) {
-//                                                $selling = $selling_array[ $product[ 'Product_ID' ] ];
-//                                        } else {
-//                                                $selling = FALSE;
-//                                        }
-
                                         $grouped_array[] = [
-//                                            'Selling' => $selling,
                                             'Selling' => $product[ 'Selling' ],
                                             'Product_ID' => $product[ 'Product_ID' ],
                                             'Name' => $product[ 'Name' ],
@@ -268,126 +252,7 @@ function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page
                                         ];
                                 }
                                 $image_group = ltrim ( $image_group, ',' );
-//                                $array[] = array ( 'group_id' => $group_row[ 'Group_ID' ], 'images' => $image_group, 'products' => $grouped_array );
                                 $array[] = array ( 'images' => $image_group, 'products' => $grouped_array );
-                                unset ( $grouped_array );
-                        }
-                }
-                return $array;
-        } else {
-                return array ( "mysqli_error" => $conn -> error );
-        }
-}
-
-function oldgetGroupedProductData ( $conn, $table_name, $start_row, $items_per_page, $filters, $previous_page = FALSE ) {
-
-        $sql = "SELECT Group_ID, Product_IDs FROM {$table_name}_groups";
-        $sql .= " LIMIT {$start_row}, 1000000";
-        $group_results = $conn -> query ( $sql );
-        $array = [];
-
-        if ( $group_results !== FALSE ) {
-                $start_group = 0;
-                $num_groups = 0;
-                foreach ( $group_results as $group_row ) {
-
-                        if ( $num_groups >= $items_per_page ) {
-                                return $array;
-                        }
-                        $image_group = "";
-
-                        $sql = "SELECT * FROM {$table_name} WHERE Product_ID IN ({$group_row[ 'Product_IDs' ]})";
-
-                        if ( $filters[ 0 ] !== FALSE AND $filters[ 0 ] !== 'All' ) {
-                                $filter_groups = [];
-                                foreach ( $filters as $filter ) {
-                                        $pos = strpos ( $filter, "=" );
-                                        $lhs = substr ( $filter, 0, $pos );
-                                        $lhs = trim ( $lhs );
-                                        $rhs = substr ( $filter, $pos + 1 );
-                                        $rhs = trim ( $rhs );
-//                                        $rhs = "'$rhs'";
-
-                                        if ( array_key_exists ( $lhs, $filter_groups ) ) {
-                                                $filter_groups[ $lhs ] = $filter_groups[ $lhs ] . ',' . $rhs;
-                                        } else {
-                                                $filter_groups[ $lhs ] = $rhs;
-                                        }
-                                }
-                                $sql .= " AND ";
-                                foreach ( $filter_groups as $key => $filter ) {
-                                        if ( $key === 'Brand' && $filter === 'All' ) {
-                                                continue;
-                                        }
-                                        if ( $key === 'Categories' ) {
-                                                $sql .= "{$key} LIKE  '%{$filter}%'";
-                                                continue;
-                                        }
-                                        $sql .= "{$key} IN ('{$filter}')";
-                                        $sql .= " AND ";
-                                }
-                                $sql = rtrim ( $sql, 'AND ' );
-                        }
-
-                        $product_results = $conn -> query ( $sql );
-
-                        $sql = "SELECT * FROM {$table_name}_extra WHERE Product_ID IN ({$group_row[ 'Product_IDs' ]})";
-                        $selling_results = $conn -> query ( $sql );
-                        $selling_array = [];
-                        foreach ( $selling_results as $selling_id ) {
-                                $selling_array[ $selling_id[ 'Product_ID' ] ] = $selling_id[ 'Selling' ];
-                        }
-
-
-                        if ( $product_results !== FALSE && $product_results -> num_rows !== 0 ) {
-                                $num_groups ++;
-                                foreach ( $product_results as $product ) {
-                                        $image_array_in = explode ( ',', $product[ 'Image' ] );
-                                        $image_array_out = [];
-                                        $update = FALSE;
-                                        $index = 0;
-
-                                        foreach ( $image_array_in as $url ) {
-                                                if ( substr ( $url, 0, 8 ) !== './media/' ) {
-                                                        $url = getImage ( $url, $product[ 'Brand' ], $product[ 'SKU' ], $index );
-                                                        // need to update url in database
-                                                        $update = TRUE;
-                                                }
-                                                $index ++;
-                                                $image_array_out[] = $url;
-                                        }
-
-                                        $images = implode ( ',', $image_array_out );
-                                        $image_group .= ',' . $images;
-
-                                        if ( $update ) {
-                                                $result = updateImageField ( $conn, $table_name, $images, $product[ 'Product_ID' ] );
-                                        }
-
-                                        if ( array_key_exists ( $product[ 'Product_ID' ], $selling_array ) ) {
-                                                $selling = $selling_array[ $product[ 'Product_ID' ] ];
-                                        } else {
-                                                $selling = FALSE;
-                                        }
-
-                                        $grouped_array[] = [
-                                            'Selling' => $selling,
-                                            'Product_ID' => $product[ 'Product_ID' ],
-                                            'Name' => $product[ 'Name' ],
-                                            'SKU' => $product[ 'SKU' ],
-                                            'Price_RRP' => $product[ 'Price_RRP' ],
-                                            'Trade_Price' => $product[ 'Trade_Price' ],
-                                            'Description' => $product[ 'Description' ],
-                                            'Image' => $images,
-                                            'Colour' => $product[ 'Colour' ],
-                                            'Size' => $product[ 'Size' ],
-                                            'Stock_Type' => $product[ 'Stock_Type' ],
-                                            'Stock_Level' => $product[ 'Stock_Level' ],
-                                            'Brand' => $product[ 'Brand' ]
-                                        ];
-                                }
-                                $image_group = ltrim ( $image_group, ',' );
-                                $array[] = array ( 'group_id' => $group_row[ 'Group_ID' ], 'images' => $image_group, 'products' => $grouped_array );
                                 unset ( $grouped_array );
                         }
                 }
@@ -443,18 +308,14 @@ function loadCSVData ( $conn, $filename ) {
 
         $table = $GLOBALS[ 'tablename' ];
 
-        //if main table doesn't exists create it
-//        if ( ! tableExists ( $conn, $table ) ) {
-//                $fields_array = getCSVHeaders ( $filename );
-//
-//                if ( ! isset ( $_SESSION ) ) {
-//                        session_start ();
-//                }
-//                $_SESSION[ 'table_name' ] = $table;
-//                $last_field = createMainTable ( $conn, $table, $fields_array );
-//        }
-
         $fullFilepath = $GLOBALS[ 'filepath' ] . $filename;
+
+        // as we want new data from the csv file every time we upload it we truncate (empty) the table before the load data infile
+        $sql = "TRUNCATE TABLE {$table}";
+        $result = $conn -> query ( $sql );
+        if ( $result !== TRUE ) {
+                return array ( "mysqli_error" => $conn -> error );
+        }
 
         $sql = "LOAD DATA LOCAL INFILE '{$fullFilepath}' REPLACE INTO TABLE {$table} FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE 1 LINES";
 
@@ -462,95 +323,78 @@ function loadCSVData ( $conn, $filename ) {
         if ( $result !== TRUE ) {
                 return array ( "mysqli_error" => $conn -> error );
         }
-
-        // create supporting tables
-//        if ( ! tableExists ( $conn, $table . '_groups' ) ) {
-//                createGroupsTable ( $conn, $table );
-//        }
-//        if ( ! tableExists ( $conn, $table . '_categories' ) ) {
-//                createCategoriesTable ( $conn, $table );
-//        }
-//        if ( ! tableExists ( $conn, $table . '_brands' ) ) {
-//                createBrandsTable ( $conn, $table );
-//        }
-//        if ( ! tableExists ( $conn, $table . '_extra' ) ) {
-//                createSellingTable ( $conn, $table );
-//        }
-        // reformat main table to include extra fields
-//        reformatMainTable ( $conn, $table );
 }
 
-function bulkFillTable ( $conn, $file_name ) {
+/*
+  //function bulkFillTable ( $conn, $file_name ) {
+  //
+  ////        $table = str_replace ( ".csv", "", $file_name );
+  //        $table = $GLOBALS[ 'tablename' ];
+  //
+  //        //if table exists return
+  //        if ( tableExists ( $conn, $table ) ) {
+  //                return 0;
+  //        }
+  //
+  //        $fields_array = getCSVHeaders ( $file_name );
+  //
+  //        if ( ! isset ( $_SESSION ) ) {
+  //                session_start ();
+  //        }
+  //        $_SESSION[ 'table_name' ] = $table;
+  //
+  //        $last_field = createMainTable ( $conn, $table, $fields_array );
+  //
+  //        $file_name = "C:/wamp64/www/StockPicker/resources/" . $file_name;
+  //        // get number of rows in file
+  //        $file = new SplFileObject ( $file_name, 'r' );
+  //        $file -> seek ( PHP_INT_MAX );
+  //        $num_rows_in_file = $file -> key () + 1;
+  //
+  //        $sql = "SELECT COUNT(*) FROM {$table}";
+  //        if ( $last_field != NULL ) {
+  //                $sql .= " GROUP BY {$last_field}";
+  //        }
+  //        $result = $conn -> query ( $sql );
+  //        if ( $result === FALSE ) {
+  //                return array ( "mysqli_error" => $conn -> error );
+  //        } else {
+  //                $num_rows_in_table = mysqli_num_rows ( $result );
+  //        }
+  //
+  //        if ( $num_rows_in_table !== 0 ) {
+  //                $sql = "TRUNCATE {$table}";
+  //                if ( $conn -> query ( $sql ) === FALSE ) {
+  //                        return array ( "mysqli_error" => $conn -> error );
+  //                }
+  //        }
+  //
+  ////    $sql = "LOAD DATA INFILE '{$file_name}' INTO TABLE {$table} CHARACTER SET UTF8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
+  //        $sql = "LOAD DATA LOCAL INFILE '{$file_name}' INTO TABLE {$table} FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
+  //
+  //        $result = $conn -> query ( $sql );
+  //        if ( $result !== TRUE ) {
+  //                return array ( "mysqli_error" => $conn -> error );
+  //        }
+  //        // "ALTER TABLE `alterego_current_stockline_green` ADD PRIMARY KEY(`Product_ID`);"
+  //        $sql = "ALTER TABLE {$table} ADD Selling BOOLEAN FIRST, ADD Parent VARCHAR(255), ADD Local_Images VARCHAR(255), ADD Local_SKU VARCHAR(255) FIRST, ADD PRIMARY KEY(`Product_ID`)";
+  //
+  //        $result = $conn -> query ( $sql );
+  //        if ( $result !== TRUE ) {
+  //                return array ( "mysqli_error" => $conn -> error );
+  //        }
+  //
+  //        // create supporting tables
+  //        createGroupsTable ( $conn, $table );
+  //        createCategoriesTable ( $conn, $table );
+  //        createBrandsTable ( $conn, $table );
+  //        // reformat main table to include extra fields
+  //        updateSupportTables ( $conn, $table );
+  //}
+ */
 
-//        $table = str_replace ( ".csv", "", $file_name );
-        $table = $GLOBALS[ 'tablename' ];
+function createMainTable ( $conn, $filename ) {
 
-        //if table exists return
-        if ( tableExists ( $conn, $table ) ) {
-                return 0;
-        }
-
-        $fields_array = getCSVHeaders ( $file_name );
-
-        if ( ! isset ( $_SESSION ) ) {
-                session_start ();
-        }
-        $_SESSION[ 'table_name' ] = $table;
-
-        $last_field = createMainTable ( $conn, $table, $fields_array );
-
-        $file_name = "C:/wamp64/www/StockPicker/resources/" . $file_name;
-        // get number of rows in file
-        $file = new SplFileObject ( $file_name, 'r' );
-        $file -> seek ( PHP_INT_MAX );
-        $num_rows_in_file = $file -> key () + 1;
-
-        $sql = "SELECT COUNT(*) FROM {$table}";
-        if ( $last_field != NULL ) {
-                $sql .= " GROUP BY {$last_field}";
-        }
-        $result = $conn -> query ( $sql );
-        if ( $result === FALSE ) {
-                return array ( "mysqli_error" => $conn -> error );
-        } else {
-                $num_rows_in_table = mysqli_num_rows ( $result );
-        }
-
-        if ( $num_rows_in_table !== 0 ) {
-                $sql = "TRUNCATE {$table}";
-                if ( $conn -> query ( $sql ) === FALSE ) {
-                        return array ( "mysqli_error" => $conn -> error );
-                }
-        }
-
-//    $sql = "LOAD DATA INFILE '{$file_name}' INTO TABLE {$table} CHARACTER SET UTF8 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
-        $sql = "LOAD DATA LOCAL INFILE '{$file_name}' INTO TABLE {$table} FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES";
-
-        $result = $conn -> query ( $sql );
-        if ( $result !== TRUE ) {
-                return array ( "mysqli_error" => $conn -> error );
-        }
-        // "ALTER TABLE `alterego_current_stockline_green` ADD PRIMARY KEY(`Product_ID`);"
-        $sql = "ALTER TABLE {$table} ADD Selling BOOLEAN FIRST, ADD Parent VARCHAR(255), ADD Local_Images VARCHAR(255), ADD Local_SKU VARCHAR(255) FIRST, ADD PRIMARY KEY(`Product_ID`)";
-
-        $result = $conn -> query ( $sql );
-        if ( $result !== TRUE ) {
-                return array ( "mysqli_error" => $conn -> error );
-        }
-
-        // create supporting tables
-        createGroupsTable ( $conn, $table );
-        createCategoriesTable ( $conn, $table );
-        createBrandsTable ( $conn, $table );
-        // reformat main table to include extra fields
-        updateSupportTables ( $conn, $table );
-}
-
-function createMainTable ( $conn, $filename ) {//, $fields_array ) {
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
         $table = $GLOBALS[ 'tablename' ];
 
         if ( ! tableExists ( $conn, $table ) ) {
@@ -590,14 +434,25 @@ function createMainTable ( $conn, $filename ) {//, $fields_array ) {
         }
 }
 
+//function createProductGroupsTable ( $conn ) {
+//
+//        $table = $GLOBALS[ 'tablename' ] . '_product_groups';
+//
+//        if ( ! tableExists ( $conn, $table ) ) {
+//
+//                $sql = "CREATE TABLE IF NOT EXISTS {$table} (Product_ID VARCHAR(255), Parent VARCHAR(255), PRIMARY KEY(Product_ID, Parent))";
+//
+//                if ( $conn -> query ( $sql ) === TRUE ) {
+//                        return TRUE;
+//                } else {
+//                        return FALSE;
+//                }
+//        }
+//}
+
 function createGroupsTable ( $conn ) {
 
         $table = $GLOBALS[ 'tablename' ] . '_groups';
-
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
 
         if ( ! tableExists ( $conn, $table ) ) {
 
@@ -608,17 +463,18 @@ function createGroupsTable ( $conn ) {
                 } else {
                         return FALSE;
                 }
+        } else {
+                $sql = "TRUNCATE TABLE {$table}_groups";
+                $result = $conn -> query ( $sql );
+                if ( $result !== TRUE ) {
+                        return array ( "mysqli_error" => $conn -> error );
+                }
         }
 }
 
 function createBrandsTable ( $conn ) {
 
         $table = $GLOBALS[ 'tablename' ] . '_brands';
-
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
 
         if ( ! tableExists ( $conn, $table ) ) {
 
@@ -629,39 +485,40 @@ function createBrandsTable ( $conn ) {
                 } else {
                         return FALSE;
                 }
-        }
-}
-
-function createImagesTable ( $conn ) {
-
-        $table = $GLOBALS[ 'tablename' ] . '_images';
-
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
-
-        if ( ! tableExists ( $conn, $table ) ) {
-
-                $sql = "CREATE TABLE IF NOT EXISTS {$table} (Product_ID INT(10), Remote_Url VARCHAR(512), Local_Url TEXT,";
-                $sql .= " PRIMARY KEY (Product_ID, Remote_Url))";
-
-                if ( $conn -> query ( $sql ) === TRUE ) {
-                        return TRUE;
-                } else {
-                        return FALSE;
+        } else {
+                $sql = "TRUNCATE TABLE {$table}_brands";
+                $result = $conn -> query ( $sql );
+                if ( $result !== TRUE ) {
+                        return array ( "mysqli_error" => $conn -> error );
                 }
         }
 }
 
+//function createImagesTable ( $conn ) {
+//
+//        $table = $GLOBALS[ 'tablename' ] . '_images';
+//
+////        $sql = "DROP TABLE IF EXISTS {$table}";
+////        if ( $conn -> query ( $sql ) === FALSE ) {
+////                return array ( "mysqli_error" => $conn -> error );
+////        }
+//
+//        if ( ! tableExists ( $conn, $table ) ) {
+//
+//                $sql = "CREATE TABLE IF NOT EXISTS {$table} (Product_ID INT(10), Remote_Url VARCHAR(512), Local_Url TEXT,";
+//                $sql .= " PRIMARY KEY (Product_ID, Remote_Url))";
+//
+//                if ( $conn -> query ( $sql ) === TRUE ) {
+//                        return TRUE;
+//                } else {
+//                        return FALSE;
+//                }
+//        }
+//}
+
 function createExtraTable ( $conn ) {
 
         $table = $GLOBALS[ 'tablename' ] . '_extra';
-
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
 
         if ( ! tableExists ( $conn, $table ) ) {
 
@@ -687,6 +544,12 @@ function createExtraTable ( $conn ) {
                 } else {
                         return FALSE;
                 }
+        } else {
+                $sql = "TRUNCATE TABLE {$table}_extra";
+                $result = $conn -> query ( $sql );
+                if ( $result !== TRUE ) {
+                        return array ( "mysqli_error" => $conn -> error );
+                }
         }
 }
 
@@ -696,17 +559,18 @@ function createCategoriesTable ( $conn ) {
 
         if ( ! tableExists ( $conn, $table ) ) {
 
-//        $sql = "DROP TABLE IF EXISTS {$table}";
-//        if ( $conn -> query ( $sql ) === FALSE ) {
-//                return array ( "mysqli_error" => $conn -> error );
-//        }
-
                 $sql = "CREATE TABLE IF NOT EXISTS {$table} (Category_ID INT(10) PRIMARY KEY AUTO_INCREMENT, Category VARCHAR(255) UNIQUE)";
 
                 if ( $conn -> query ( $sql ) === TRUE ) {
                         return TRUE;
                 } else {
                         return FALSE;
+                }
+        } else {
+                $sql = "TRUNCATE TABLE {$table}_categories";
+                $result = $conn -> query ( $sql );
+                if ( $result !== TRUE ) {
+                        return array ( "mysqli_error" => $conn -> error );
                 }
         }
 }
@@ -768,22 +632,14 @@ function updateSupportTables ( $conn ) {
                                 $groups_array[ $ParentSKU ] = array ( 'Product_IDs' => $Product_ID, 'Image_string' => $image_string );
                         }
 
-//                        $value = "('$ParentSKU','$Product_IDs','$image_string')";
-//                        if ( ! in_array ( $value, $groups_array ) ) {
-//                                $groups_array[] = $value;
-//                        }                      
-
                         $index = 0;
                         foreach ( $image_array as $remote_url ) {
-
-
 
                                 $media_dir = $GLOBALS[ 'media_dir' ];
 
                                 if ( ! is_dir ( $media_dir ) ) {
                                         mkdir ( $media_dir );
                                 }
-
 
                                 $media_dir = $media_dir . strtolower ( $row[ 'Brand' ] ) . '/';
                                 $media_dir = str_replace ( ' ', '', $media_dir );
@@ -818,29 +674,35 @@ function updateSupportTables ( $conn ) {
                 }
 
                 // update images table
-                $values = "";
-                $values = implode ( ',', $image_table_array );
-
-                $images_table = $table . "_images";
-                $sql = "INSERT IGNORE INTO {$images_table} (Product_ID, Remote_Url, Local_Url) VALUES {$values}";
-                $sql_result = $conn -> query ( $sql );
-
-                if ( $sql_result !== TRUE ) {
-                        return array ( "mysqli_error" => $conn -> error );
-                }
-
-                // update selling table inserting new rows
+//                $values = "";
+//                $values = implode ( ',', $image_table_array );
+//
+//                $images_table = $table . "_images";
+//                $sql = "INSERT IGNORE INTO {$images_table} (Product_ID, Remote_Url, Local_Url) VALUES {$values}";
+//                $sql_result = $conn -> query ( $sql );
+//
+//                if ( $sql_result !== TRUE ) {
+//                        return array ( "mysqli_error" => $conn -> error );
+//                }
+                // update extra table inserting new rows
                 $values = "";
                 $values = implode ( ',', $selling_parent_array );
 
-                $selling_table = $table . "_extra";
-                $sql = "INSERT IGNORE INTO {$selling_table} (Product_ID, Parent) VALUES {$values}";
+                $extra_table = $table . "_extra";
+                $sql = "INSERT IGNORE INTO {$extra_table} (Product_ID, Parent) VALUES {$values}";
                 $sql_result = $conn -> query ( $sql );
 
                 if ( $sql_result !== TRUE ) {
                         return array ( "mysqli_error" => $conn -> error );
                 }
 
+//                $product_groups_table = $table . "_product_groups";
+//                $sql = "INSERT IGNORE INTO {$product_groups_table} (Product_ID, Parent) VALUES {$values}";
+//                $sql_result = $conn -> query ( $sql );
+//
+//                if ( $sql_result !== TRUE ) {
+//                        return array ( "mysqli_error" => $conn -> error );
+//                }
                 // update brands table inserting new rows
                 $values = "";
                 $values = implode ( ',', $brands_array );
@@ -886,24 +748,6 @@ function updateSupportTables ( $conn ) {
                 if ( $sql_result !== TRUE ) {
                         return array ( "mysqli_error" => $conn -> error );
                 }
-        }
-}
-
-function _getGroups ( $conn, $table_name ) {
-
-        $results = $conn -> query ( "SELECT Parent, Product_IDs FROM {$table_name}" . "_groups" );
-        if ( $results === FALSE ) {
-                return array ( "mysqli_error" => $conn -> error );
-        } else {
-                $group_array = [];
-                while ( $row = $results -> fetch_assoc () ) {
-                        if ( array_key_exists ( $row[ 'Parent' ], $group_array ) ) {
-                                $group_array[ $row[ 'Parent' ] ] = $group_array[ $row[ 'Parent' ] ] . ',' . $row[ 'Product_IDs' ];
-                        } else {
-                                $group_array[ $row[ 'Parent' ] ] = $row[ 'Product_IDs' ];
-                        }
-                }
-                return $group_array;
         }
 }
 

@@ -84,7 +84,7 @@ function getImage ( $file_url, $brand, $SKU, $index ) {
         }
 
         if ( basename ( $file_url ) === "" || basename ( $file_url ) === "no_selection" ) {
-                return "$media_dir . image_coming_soon.jpg";
+                return $media_dir . "image_coming_soon.jpg";
         }
 
         $media_dir = $media_dir . strtolower ( $brand ) . '/';
@@ -139,11 +139,14 @@ function getImage ( $file_url, $brand, $SKU, $index ) {
                 $SKU = str_replace ( ' ', '', $SKU );
 
                 $image_path = $media_dir . $SKU . $ext;
-                copy ( $file, $image_path );
-                return $image_path;
+                if ( copy ( $file, $image_path ) ) {
+                        return $image_path;
+                } else {
+                        return $media_dir . "image_coming_soon.jpg";
+                }
         }
 
-        return "$media_dir . image_coming_soon.jpg";
+        return $media_dir . "image_coming_soon.jpg";
 }
 
 function downloadImage ( $product, $image_array ) {
@@ -222,32 +225,6 @@ function downloadImage ( $product, $image_array ) {
                 return $new_image_array;
         }
 }
-
-//
-//function createImageArray2 ( $product ) {
-//
-//        if ( isset ( $product ) && ! empty ( $product ) ) {
-//
-//                $image_array = [];
-//
-//                $value = str_replace ( ',', ' ', $product[ 'Image' ] );
-//                $value = explode ( ' ', $value );
-//                $image_array [] = $value[ 0 ];
-//
-//                foreach ( $product as $key => $field ) {
-//                        if ( substr ( $key, 0, 5 ) == 'Image' ) {
-//                                $temp = str_replace ( ',', ' ', $field );
-//                                $value = explode ( ' ', $temp );
-//                                foreach ( $value as $url ) {
-//                                        if ( ! in_array ( $url, $image_array ) && stripos ( $url, 'https://' ) === 0 ) {
-//                                                $image_array [] = $url;
-//                                        }
-//                                }
-//                        }
-//                }
-//                return $image_array;
-//        }
-//}
 
 function createImageArray ( $row ) {
 
@@ -511,8 +488,8 @@ function productDataToHtml ( $data ) {
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
-                        $html_array[] = '<div id="price_' . $product[ 'Product_ID' ] . '" class="info_item">Price : £' . $product[ 'Price_RRP' ] . '</div>';
-                        $html_array[] = '<div id="trade_price_' . $product[ 'Product_ID' ] . '" class="info_item">Trade Price : £' . $product[ 'Trade_Price' ] . '</div>';
+                        $html_array[] = '<div id="price_' . $product[ 'Product_ID' ] . '" class="info_item">Price : £' . round($product[ 'Price_RRP' ], 2) . '</div>';
+                        $html_array[] = '<div id="trade_price_' . $product[ 'Product_ID' ] . '" class="info_item">Trade Price : £' . round($product[ 'Trade_Price' ], 2) . '</div>';
 
                         if ( $product[ 'Selling' ] == TRUE ) {
                                 $html_array[] = '<div class="info_item">Selling : <input id="selling_' . $product[ 'Product_ID' ] . '" class="selling_checkbox" type="checkbox"  data-id="' . $product[ 'Product_ID' ] . '" checked></div>';
@@ -676,85 +653,6 @@ function createGroup ( $products, $wholesaler, $parent ) {
                 $file_url = explode ( ',', $products[ $i - 1 ][ 'Image' ] );
                 foreach ( $file_url as $url ) {
                         $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $products[ 0 ][ 'Brand' ], $products[ 0 ][ 'SKU' ], 0 ), '.' );
-                }
-                $image = ltrim ( $image, ',' );
-
-                $new_array[ $i ][ 'Type' ] = 'variation';
-                $new_array[ $i ][ 'Published' ] = '1';
-                $new_array[ $i ][ 'Is featured?' ] = '0';
-                $new_array[ $i ][ 'Visibility in catalogue' ] = 'visible';
-                $new_array[ $i ][ 'Backorders allowed?' ] = '0';
-                $new_array[ $i ][ 'Sold individually?' ] = '0';
-                $new_array[ $i ][ 'Allow customer reviews?' ] = '0';
-                $new_array[ $i ][ 'Position' ] = '0';
-                $new_array[ $i ][ 'Images' ] = $image;
-                $new_array[ $i ][ 'SKU' ] = str_replace ( '/', '', $new_array[ $i ][ 'SKU' ] );
-                $new_array[ $i ][ 'Parent' ] = $parent;
-        }
-
-        return $new_array;
-}
-
-function OldcreateGroup ( $result, $wholesaler, $parent ) {
-
-        $map = getResourceFromXML ( $GLOBALS[ 'res_file' ], $wholesaler . '_map', "map", TRUE );
-        $group_added = FALSE;
-        $num_products = count ( $result );
-
-        foreach ( $map as $wookey => $woovalue ) {
-                // $new_array[0] is the group
-                if ( stripos ( $wookey, 'attribute' ) === FALSE ) {
-                        $new_array[ 0 ][ $wookey ] = $woovalue === "" ? "" : $result[ 0 ][ $woovalue ];
-                        for ( $i = 1; $i <= $num_products; $i ++ ) {
-                                $new_array[ $i ][ $wookey ] = $woovalue === "" ? "" : $result[ $i - 1 ][ $woovalue ];
-                        }
-                } else {
-                        if ( $woovalue !== "" ) {
-                                $num = intval ( preg_replace ( '/[^0-9]+/', '', $wookey ), 10 );
-                                $new_array[ 0 ][ $wookey ] = $woovalue;
-                                for ( $i = 1; $i <= $num_products; $i ++ ) {
-                                        $new_array[ $i ][ $wookey ] = $woovalue;
-                                }
-                                for ( $i = 1; $i <= $num_products; $i ++ ) {
-                                        $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] . ',' . $result[ $i - 1 ][ $woovalue ];
-                                        $new_array[ $i ][ 'Attribute ' . $num . ' value(s)' ] = $result[ $i - 1 ][ $woovalue ];
-
-                                        $new_array[ $i ][ 'Attribute ' . $num . ' visible' ] = 1;
-                                        $new_array[ $i ][ 'Attribute ' . $num . ' global' ] = 1;
-                                        $new_array[ $i ][ 'Attribute ' . $num . ' default' ] = "";
-                                }
-                                $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ] = ltrim ( $new_array[ 0 ][ 'Attribute ' . $num . ' value(s)' ], ',' );
-                                $new_array[ 0 ][ 'Attribute ' . $num . ' visible' ] = 1;
-                                $new_array[ 0 ][ 'Attribute ' . $num . ' global' ] = 1;
-                                $new_array[ 0 ][ 'Attribute ' . $num . ' default' ] = $result[ 0 ][ $woovalue ];
-                        }
-                }
-        }
-
-        // get any images that haven't been downloaded
-        $file_url = explode ( ',', $result[ 0 ][ 'Image' ] );
-        foreach ( $file_url as $url ) {
-                $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $result[ 0 ][ 'Brand' ], $result[ 0 ][ 'SKU' ], 0 ), '.' );
-        }
-        $image = ltrim ( $image, ',' );
-
-        $new_array[ 0 ][ 'Name' ] = getBaseName ( $new_array[ 0 ][ 'Name' ] );
-        $new_array[ 0 ][ 'Type' ] = 'variable';
-        $new_array[ 0 ][ 'Published' ] = '1';
-        $new_array[ 0 ][ 'Is featured?' ] = '0';
-        $new_array[ 0 ][ 'Visibility in catalogue' ] = 'visible';
-        $new_array[ 0 ][ 'Backorders allowed?' ] = '0';
-        $new_array[ 0 ][ 'Sold individually?' ] = '0';
-        $new_array[ 0 ][ 'Allow customer reviews?' ] = '0';
-        $new_array[ 0 ][ 'Position' ] = '0';
-        $new_array[ 0 ][ 'Images' ] = $image;
-        $new_array[ 0 ][ 'SKU' ] = $parent;
-
-        for ( $i = 1; $i <= $num_products; $i ++ ) {
-                $image = "";
-                $file_url = explode ( ',', $result[ $i - 1 ][ 'Image' ] );
-                foreach ( $file_url as $url ) {
-                        $image .= ',' . 'http://localhost/StockPicker' . ltrim ( getImage ( $url, $result[ 0 ][ 'Brand' ], $result[ 0 ][ 'SKU' ], 0 ), '.' );
                 }
                 $image = ltrim ( $image, ',' );
 
