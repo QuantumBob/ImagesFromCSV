@@ -13,7 +13,7 @@ if ( ! include('xml_functions.php') ) {
 $GLOBALS[ 'res_dir' ] = './resources/';
 $GLOBALS[ 'res_file' ] = './resources/resources.xml';
 $GLOBALS[ 'media_dir' ] = './media/';
-$GLOBALS[ 'tablename' ] = 'stocklines';
+$GLOBALS[ 'tablename' ] = 'stockpicker';
 $GLOBALS[ 'filepath' ] = 'C:/wamp64/www/StockPicker/resources/';
 $GLOBALS[ 'numproducts' ] = 0;
 //$GLOBALS['num_rows'] = 5;

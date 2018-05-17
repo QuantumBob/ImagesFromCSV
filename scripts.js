@@ -207,7 +207,53 @@ jQuery(document).ready(function ($) {
                         }
                 });
         });
+        
+/*  
+       jQuery(".parent").click(function () {
 
+                startWaiting();
+                var myForm = jQuery('#existing_files_form')[0];
+                var formData = new FormData(myForm);
+                formData.append("filename", this.name);
+                formData.append("action", 'useFile');
+
+                jQuery.ajax({
+                        url: 'routing.php',
+                        type: 'post',
+                        data: formData,
+                        // Tell jQuery not to process data or worry about content-type. You *must* include these options!
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        // Custom XMLHttpRequest
+                        xhr: function () {
+                                var myXhr = $.ajaxSettings.xhr();
+                                if (myXhr.upload) {
+                                        // For handling the progress of the upload
+                                        myXhr.upload.addEventListener('progress', function (e) {
+                                                if (e.lengthComputable) {
+                                                        $('progress').attr({
+                                                                value: e.loaded,
+                                                                max: e.total,
+                                                        });
+                                                }
+                                        }, false);
+                                }
+                                return myXhr;
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                                stopWaiting();
+                                jQuery('#product_div').append(jqXHR.responseText);
+                        },
+                        success: function (data) {
+                                stopWaiting();
+                                jQuery('#upload_div').hide();
+                                jQuery('#header_div').show();
+                                jQuery('#header_form').append(data);
+                        }
+                });
+        });
+*/
         jQuery('#uploadedfile').change(function () {
 
                 startWaiting();
@@ -709,7 +755,7 @@ jQuery(document).ready(function ($) {
 
         jQuery("#product_div").on('change', '.selling_checkbox', function () {
 
-                startWaiting();
+//                startWaiting();
 //        var myForm = jQuery('#products_form')[0];
                 var formData = new FormData();
 
@@ -752,11 +798,12 @@ jQuery(document).ready(function ($) {
                                 return myXhr;
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                                stopWaiting();
+//                                stopWaiting();
                                 jQuery('#product_div').append(jqXHR.responseText);
                         },
                         success: function (data) {
-                                stopWaiting();
+//                                stopWaiting();
+                                return false;
                         }
                 });
         });

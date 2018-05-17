@@ -246,6 +246,7 @@ function getGroupedProductData ( $conn, $table_name, $start_row, $items_per_page
                                             'Image' => $images,
                                             'Colour' => $product[ 'Colour' ],
                                             'Size' => $product[ 'Size' ],
+                                            'Parent' => $product['Parent'],
                                             'Stock_Type' => $product[ 'Stock_Type' ],
                                             'Stock_Level' => $product[ 'Stock_Level' ],
                                             'Brand' => $product[ 'Brand' ]
@@ -288,7 +289,7 @@ function updateSelling () {
 
         if ( $conn -> query ( $sql ) ) {
                 $conn -> close ();
-                return TRUE;
+                return FALSE;
         } else {
                 $error = $conn -> error;
                 $conn -> close ();
@@ -316,6 +317,7 @@ function loadCSVData ( $conn, $filename ) {
         if ( $result !== TRUE ) {
                 return array ( "mysqli_error" => $conn -> error );
         }
+
 
         $sql = "LOAD DATA LOCAL INFILE '{$fullFilepath}' REPLACE INTO TABLE {$table} FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE 1 LINES";
 
@@ -397,40 +399,54 @@ function createMainTable ( $conn, $filename ) {
 
         $table = $GLOBALS[ 'tablename' ];
 
-        if ( ! tableExists ( $conn, $table ) ) {
-
-                $fields_array = getCSVHeaders ( $filename );
-
-                if ( ! isset ( $_SESSION ) ) {
-                        session_start ();
-                }
-                $_SESSION[ 'table_name' ] = $table;
-
-                $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
-                $type = 'VARCHAR(256)';
-
-                foreach ( $fields_array as $field ) {
-
-                        $field = str_replace ( ' ', '_', $field );
-                        $field = str_replace ( '(', '', $field );
-                        $field = str_replace ( ')', '', $field );
-                        $field = str_replace ( ',', '', $field );
-
-                        if ( stripos ( $field, 'description' ) !== FALSE ) {
-                                $sql .= $field . "  TEXT,";
-                        } elseif ( stripos ( $field, 'image' ) !== FALSE ) {
-                                $sql .= $field . "  VARCHAR(512),";
-                        } else {
-                                $sql .= $field . "  " . $type . ",";
-                        }
-                }
-                $sql .= " PRIMARY KEY (Product_ID))";
+        if ( tableExists ( $conn, $table ) ) {
+                // rename table to old_table then create new table again
+                $sql .= "RENAME TABLE {$table} TO old_{$table}";
 
                 if ( $conn -> query ( $sql ) !== TRUE ) {
                         return array ( "mysqli_error" => $conn -> error );
-                } else {
-                        return $field;
                 }
+        }
+        if ( tableExists ( $conn, $table . "_extra" ) ) {
+                // do same for _extra table for reference purposes
+                $sql .= "RENAME TABLE {$table}_extra TO old_{$table}_extra";
+
+                if ( $conn -> query ( $sql ) !== TRUE ) {
+                        return array ( "mysqli_error" => $conn -> error );
+                }
+        }
+
+        $fields_array = getCSVHeaders ( $filename );
+
+        if ( ! isset ( $_SESSION ) ) {
+                session_start ();
+        }
+        $_SESSION[ 'table_name' ] = $table;
+
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (";
+        $type = 'VARCHAR(256)';
+
+        foreach ( $fields_array as $field ) {
+
+                $field = str_replace ( ' ', '_', $field );
+                $field = str_replace ( '(', '', $field );
+                $field = str_replace ( ')', '', $field );
+                $field = str_replace ( ',', '', $field );
+
+                if ( stripos ( $field, 'description' ) !== FALSE ) {
+                        $sql .= $field . "  TEXT,";
+                } elseif ( stripos ( $field, 'image' ) !== FALSE ) {
+                        $sql .= $field . "  VARCHAR(512),";
+                } else {
+                        $sql .= $field . "  " . $type . ",";
+                }
+        }
+        $sql .= " PRIMARY KEY (Product_ID))";
+
+        if ( $conn -> query ( $sql ) !== TRUE ) {
+                return array ( "mysqli_error" => $conn -> error );
+        } else {
+                return $field;
         }
 }
 
@@ -596,7 +612,9 @@ function updateSupportTables ( $conn ) {
 
                 while ( $row = $results -> fetch_assoc () ) {
 
-                        $ParentSKU = $row[ 'Product_Range' ] === "" ? generateParentSKU ( $row[ 'Name' ] ) : generateParentSKU ( $row[ 'Product_Range' ] );
+//                        $ParentSKU = $row[ 'Product_Range' ] === "" ? generateParentSKU ( $row[ 'Name' ] ) : generateParentSKU ( $row[ 'Product_Range' ] );
+//                        $ParentSKU = $row[ 'Product_Range' ] = generateParentSKU ( $row[ 'Name' ] );
+                        $ParentSKU = $row[ 'Product_Range' ] = generateParentSKU ( $row[ 'SKU' ] );
                         $Product_ID = $row[ 'Product_ID' ];
 
                         $value = "('$Product_ID','$ParentSKU')";

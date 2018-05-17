@@ -268,6 +268,10 @@ function getBaseName ( $name ) {
 }
 
 function generateParentSKU ( $SKU ) {
+        
+        //AVAAMARONEBODY2XL/3XL
+        //AVAAMARONEBODYS/M
+
 
         $SKU = str_replace ( '?', '_', $SKU );
         $SKU = str_replace ( '(', '_', $SKU );
@@ -506,6 +510,7 @@ function productDataToHtml ( $data ) {
                         $html_array[] = '<div class="table_row">';
                         $html_array[] = '<div  id="size_' . $product[ 'Product_ID' ] . '" class="info_item">Size : ' . $product[ 'Size' ] . '</div>';
                         $html_array[] = '<div  id="colour_' . $product[ 'Product_ID' ] . '" class="info_item">Colour : ' . $product[ 'Colour' ] . '</div>';
+                        $html_array[] = '<div  id="parent_' . $product[ 'Product_ID' ] . '" class="info_item parent">Parent : ' . $product[ 'Parent' ] . '</div>';
                         $html_array[] = '</div>'; // table_row
 
                         $html_array[] = '<div class="table_row">';
